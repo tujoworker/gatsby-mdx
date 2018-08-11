@@ -4829,6 +4829,14 @@ fs-extra@^5.0.0:
     jsonfile "^4.0.0"
     universalify "^0.1.0"
 
+fs-extra@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-7.0.0.tgz#8cc3f47ce07ef7b3593a11b9fb245f7e34c041d6"
+  dependencies:
+    graceful-fs "^4.1.2"
+    jsonfile "^4.0.0"
+    universalify "^0.1.0"
+
 fs-minipass@^1.2.5:
   version "1.2.5"
   resolved "https://registry.yarnpkg.com/fs-minipass/-/fs-minipass-1.2.5.tgz#06c277218454ec288df77ada54a03b8702aacb9d"
@@ -4898,24 +4906,6 @@ gatsby-link@^2.0.0-beta.5:
     prop-types "^15.6.1"
     react-lifecycles-compat "^3.0.2"
     ric "^1.3.0"
-
-gatsby-mdx@*:
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/gatsby-mdx/-/gatsby-mdx-0.0.9.tgz#74197fe87bf324081347e96a26640b830209c463"
-  dependencies:
-    "@babel/plugin-proposal-object-rest-spread" "^7.0.0-beta.54"
-    debug "^3.1.0"
-    escape-string-regexp "^1.0.5"
-    gray-matter "^4.0.1"
-    json5 "^1.0.1"
-    lodash "^4.17.10"
-    mdast-util-to-string "^1.0.4"
-    remark "^9.0.0"
-    retext "^5.0.0"
-    strip-markdown "^3.0.1"
-    underscore.string "^3.3.4"
-    unist-util-remove "^1.0.1"
-    unist-util-visit "^1.4.0"
 
 gatsby-plugin-emotion@next:
   version "2.0.0-beta.3"
@@ -7754,8 +7744,6 @@ mini-css-extract-plugin@^0.4.0:
 mini-html-webpack-plugin@^0.2.3:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/mini-html-webpack-plugin/-/mini-html-webpack-plugin-0.2.3.tgz#2dfbdc3f35f6ae03864a608808381f8137311ea0"
-  dependencies:
-    webpack-sources "^1.1.0"
 
 minimalistic-assert@^1.0.0, minimalistic-assert@^1.0.1:
   version "1.0.1"
