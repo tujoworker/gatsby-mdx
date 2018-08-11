@@ -1,6 +1,7 @@
 const babel = require("@babel/core");
 const babelReact = require("@babel/preset-react");
 const objRestSpread = require("@babel/plugin-proposal-object-rest-spread");
+const merge = require("lodash/merge");
 const mdx = require("./mdx");
 const gatherExportsGenerator = require("./babel-plugin-gather-exports");
 
@@ -14,18 +15,16 @@ module.exports = code => {
 
   const exportedVariables = gatherExports.results();
 
-  // https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-transformer-remark/src/on-node-create.js#L22
-  // Convert date objects to string. Otherwise there's type mismatches
-  // during inference as some dates are strings and others date objects.
-  // if (data.data) {
-  //   data.data = _.mapValues(data.data, v => {
-  //     if (_.isDate(v)) {
-  //       return v.toJSON()
-  //     } else {
-  //       return v
-  //     }
-  //   })
-  // }
+  // grab the frontmatter
+  const classicFrontmatter = exportedVariables._frontmatter || {};
+  const exportFrontmatter = exportedVariables.frontmatter || {};
+
+  // delete the frontmatter from the exports
+  delete exportedVariables._frontmatter;
+  delete exportedVariables.frontmatter;
+
+  // add the merged frontmatter to the exports
+  exportedVariables.frontmatter = merge(classicFrontmatter, exportFrontmatter);
 
   return exportedVariables;
 };
