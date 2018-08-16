@@ -5,11 +5,11 @@ const mdx = require("./utils/mdx");
 const extractExports = require("./utils/extract-exports");
 
 module.exports = async (
-  { meta, content: nodeContent },
-  node,
-  { createNodeId, createParentChildLink }
+  { node, transform, getNode, createNodeId },
+  { createNode, createParentChildLink },
+  options
 ) => {
-  const options = defaultOptions(/*  pluginOptions */);
+  const { meta, content: nodeContent } = transform({ node, getNode });
 
   const code = await mdx(nodeContent, options);
 
@@ -52,6 +52,7 @@ module.exports = async (
     .update(JSON.stringify(mdxNode))
     .digest(`hex`);
 
+  createNode(mdxNode);
   createParentChildLink({ parent: node, child: mdxNode });
   return mdxNode;
 };
