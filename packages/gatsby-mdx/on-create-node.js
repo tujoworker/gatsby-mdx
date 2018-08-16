@@ -3,7 +3,7 @@ const merge = require("lodash/merge");
 const defaultOptions = require("./utils/default-options");
 const mdx = require("./utils/mdx");
 const extractExports = require("./utils/extract-exports");
-const createMDXNode = require("./create-node-spec");
+const createMDXNode = require("./utils/create-mdx-node");
 
 module.exports = async (
   { node, getNode, loadNodeContent, actions, createNodeId },
