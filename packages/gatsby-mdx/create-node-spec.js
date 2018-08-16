@@ -1,0 +1,57 @@
+const crypto = require("crypto");
+const merge = require("lodash/merge");
+const defaultOptions = require("./utils/default-options");
+const mdx = require("./utils/mdx");
+const extractExports = require("./utils/extract-exports");
+
+module.exports = async (
+  { meta, content: nodeContent },
+  node,
+  { createNodeId, createParentChildLink }
+) => {
+  const options = defaultOptions(/*  pluginOptions */);
+
+  const code = await mdx(nodeContent, options);
+
+  // extract all the exports
+  const nodeExports = extractExports(code);
+
+  // grab the frontmatter
+  const classicFrontmatter = nodeExports._frontmatter || {};
+  const exportFrontmatter = nodeExports.frontmatter || {};
+
+  // // delete the frontmatter from the exports
+  delete nodeExports._frontmatter;
+  delete nodeExports.frontmatter;
+
+  const frontmatter = merge(classicFrontmatter, exportFrontmatter);
+
+  const mdxNode = {
+    id: createNodeId(`${node.id} >>> ${node.internal.type}Mdx`),
+    children: [],
+    parent: node.id,
+    internal: {
+      content: nodeContent,
+      type: `${node.internal.type}Mdx`
+    }
+  };
+
+  mdxNode.frontmatter = {
+    title: ``, // always include a title
+    ...frontmatter,
+    _PARENT: node.id
+  };
+
+  mdxNode.meta = meta;
+  mdxNode.excerpt = frontmatter.excerpt;
+  mdxNode.exports = nodeExports;
+  mdxNode.rawBody = nodeContent;
+
+  mdxNode.internal.contentDigest = crypto
+    .createHash(`md5`)
+    .update(JSON.stringify(mdxNode))
+    .digest(`hex`);
+
+  createParentChildLink({ parent: node, child: mdxNode });
+  return mdxNode;
+};
