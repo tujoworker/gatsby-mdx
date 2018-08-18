@@ -37,7 +37,6 @@ exports.onCreatePage = async ({ page, actions }, pluginOptions) => {
         {
           context: {
             frontmatter: {
-              title: ``, // always include a title
               ...frontmatter
             }
           }

@@ -2,7 +2,6 @@ const babel = require("@babel/core");
 const babelReact = require("@babel/preset-react");
 const objRestSpread = require("@babel/plugin-proposal-object-rest-spread");
 const merge = require("lodash/merge");
-const mdx = require("./mdx");
 const gatherExportsGenerator = require("./babel-plugin-gather-exports");
 
 // grab all the export values
