@@ -17,6 +17,15 @@ const stripMarkdown = require("strip-markdown");
 const grayMatter = require("gray-matter");
 const { createMdxAstCompiler } = require("@mdx-js/mdx");
 const prune = require("underscore.string/prune");
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const mkdirp = require("mkdirp");
+const BabelPluginPluckImports = require("babel-plugin-pluck-imports");
+const objRestSpread = require("@babel/plugin-proposal-object-rest-spread");
+const babel = require("@babel/core");
+const rawMDX = require("@mdx-js/mdx");
+
 const mdx = require("./utils/mdx");
 const getTableOfContents = require("./utils/get-table-of-content");
 const defaultOptions = require("./utils/default-options");
@@ -24,17 +33,17 @@ const defaultOptions = require("./utils/default-options");
 const stripFrontmatter = source => grayMatter(source).content;
 
 module.exports = (
-  { type, store, pathPrefix, getNode, getNodes, cache, reporter },
+  { type /*store, pathPrefix, getNode, getNodes, cache, reporter*/ },
   pluginOptions
 ) => {
-  if (type.name !== `Mdx`) {
+  if (!type.name.endsWith(`Mdx`)) {
     return {};
   }
 
   const options = defaultOptions(pluginOptions);
   const compiler = createMdxAstCompiler(options);
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve /*, reject*/) => {
     async function getAST(mdxNode) {
       return compiler.parse(stripFrontmatter(mdxNode.rawBody));
     }
@@ -56,8 +65,11 @@ module.exports = (
       return remark().stringify(textAst);
     }
 
-    async function getCode(mdxNode) {
-      const code = await mdx(mdxNode.rawBody, options);
+    async function getCode(mdxNode, overrideOptions) {
+      const code = await mdx(mdxNode.rawBody, {
+        ...options,
+        ...overrideOptions
+      });
 
       return `import React from 'react'
 import { MDXTag } from '@mdx-js/tag'
@@ -66,7 +78,7 @@ ${code}`;
     }
 
     const HeadingType = new GraphQLObjectType({
-      name: `MdxHeading`,
+      name: `MdxHeading${type.name}`,
       fields: {
         value: {
           type: GraphQLString,
@@ -83,7 +95,7 @@ ${code}`;
       }
     });
     const Headings = new GraphQLEnumType({
-      name: `Headings`,
+      name: `Headings${type.name}`,
       values: {
         h1: { value: 1 },
         h2: { value: 2 },
@@ -96,10 +108,104 @@ ${code}`;
 
     return resolve({
       code: {
-        type: GraphQLString,
-        resolve(markdownNode) {
-          return getCode(markdownNode);
-        }
+        resolve(mdxNode) {
+          return mdxNode;
+        },
+        type: new GraphQLObjectType({
+          name: `MDXCode${type.name}`,
+          fields: {
+            raw: {
+              type: GraphQLString,
+              resolve(markdownNode) {
+                return getCode(markdownNode);
+              }
+            },
+            body: {
+              type: GraphQLString,
+              async resolve(mdxNode) {
+                const { content } = grayMatter(mdxNode.rawBody);
+                let code = await rawMDX(content, {
+                  ...options
+                });
+
+                const instance = new BabelPluginPluckImports();
+                const result = babel.transform(code, {
+                  plugins: [instance.plugin, objRestSpread],
+                  presets: [require("@babel/preset-react")]
+                });
+
+                // TODO: be more sophisticated about these replacements
+                return result.code
+                  .replace("export default", "return")
+                  .replace(/\nexport /g, "\n");
+              }
+            },
+            scope: {
+              type: GraphQLString,
+              async resolve(mdxNode) {
+                const CACHE_DIR = `.cache`;
+                const PLUGIN_DIR = `gatsby-mdx`;
+                const REMOTE_MDX_DIR = `remote-mdx-dir`;
+                mkdirp.sync(
+                  path.join(
+                    pluginOptions.root,
+                    CACHE_DIR,
+                    PLUGIN_DIR,
+                    REMOTE_MDX_DIR
+                  )
+                );
+                const createFilePath = (directory, filename, ext) =>
+                  path.join(
+                    directory,
+                    CACHE_DIR,
+                    PLUGIN_DIR,
+                    REMOTE_MDX_DIR,
+                    `${filename}${ext}`
+                  );
+
+                const createHash = str =>
+                  crypto
+                    .createHash(`md5`)
+                    .update(str)
+                    .digest(`hex`);
+
+                const { content } = grayMatter(mdxNode.rawBody);
+                let code = await rawMDX(content, {
+                  ...options
+                });
+
+                const instance = new BabelPluginPluckImports();
+                babel.transform(code, {
+                  plugins: [instance.plugin, objRestSpread],
+                  presets: [require("@babel/preset-react")]
+                });
+
+                const identifiers = Array.from(instance.state.identifiers);
+                const imports = Array.from(instance.state.imports);
+                if (!identifiers.includes("React")) {
+                  identifiers.push("React");
+                  imports.push("import React from 'react'");
+                }
+                if (!identifiers.includes("MDXTag")) {
+                  identifiers.push("MDXTag");
+                  imports.push("import { MDXTag } from '@mdx-js/tag'");
+                }
+                const scopeFileContent = `${imports.join("\n")}
+
+export default { ${identifiers.join(", ")} }`;
+
+                const filePath = createFilePath(
+                  pluginOptions.root,
+                  createHash(scopeFileContent),
+                  ".js"
+                );
+
+                fs.writeFileSync(filePath, scopeFileContent);
+                return filePath;
+              }
+            }
+          }
+        })
       },
       excerpt: {
         type: GraphQLString,
@@ -179,7 +285,7 @@ ${code}`;
       },
       wordCount: {
         type: new GraphQLObjectType({
-          name: `wordCounts`,
+          name: `wordCounts${type.name}`,
           fields: {
             paragraphs: {
               type: GraphQLInt

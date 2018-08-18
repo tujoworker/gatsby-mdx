@@ -52,7 +52,7 @@ exports.onCreatePage = async ({ page, actions }, pluginOptions) => {
  * Add the webpack config for loading MDX files
  */
 exports.onCreateWebpackConfig = (
-  { stage, rules, loaders, plugins, actions, getNodes },
+  { stage, loaders, plugins, actions, getNodes },
   pluginOptions
 ) => {
   const options = defaultOptions(pluginOptions);
@@ -71,6 +71,11 @@ exports.onCreateWebpackConfig = (
   actions.setWebpackConfig({
     module: {
       rules: [
+        {
+          test: /\.js$/,
+          include: path.resolve(__dirname, ".cache/gatsby-mdx"),
+          use: [loaders.js()]
+        },
         {
           test: testPattern,
           exclude: decks,

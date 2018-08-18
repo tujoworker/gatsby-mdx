@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const defaultOptions = require("./utils/default-options");
 const mdx = require("./utils/mdx");
 const extractExports = require("./utils/extract-exports");
+const createMDXNode = require("./utils/create-mdx-node");
 
 module.exports = async (
   { node, getNode, loadNodeContent, actions, createNodeId },
@@ -10,6 +11,19 @@ module.exports = async (
   const { extensions, ...options } = defaultOptions(pluginOptions);
   const { createNode, createParentChildLink } = actions;
 
+  if (Object.keys(options.transformers).includes(node.internal.type)) {
+    createMDXNode(
+      {
+        node,
+        transform: options.transformers[node.internal.type],
+        createNode,
+        getNode,
+        createNodeId
+      },
+      actions,
+      pluginOptions
+    );
+  }
   // We only care about markdown content.
   // replace with mediaType when mime-db is merged
   //    node.internal.mediaType !== `text/mdx`

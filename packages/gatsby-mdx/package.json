@@ -1,6 +1,6 @@
 {
   "name": "gatsby-mdx",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "mdx integration for gatsby",
   "main": "index.js",
   "license": "MIT",
@@ -8,12 +8,14 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "@mdx-js/mdx": "^0.15.0-1",
-    "@mdx-js/tag": "^0.15.0-1",
+    "@mdx-js/mdx": "^0.15.0-2",
+    "@mdx-js/tag": "^0.15.0-2",
     "mdx-deck": "^1.5.7"
   },
   "dependencies": {
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.54",
+    "babel-plugin-pluck-exports": "0.0.1",
+    "babel-plugin-pluck-imports": "0.0.1",
     "debug": "^3.1.0",
     "escape-string-regexp": "^1.0.5",
     "fs-extra": "^7.0.0",
