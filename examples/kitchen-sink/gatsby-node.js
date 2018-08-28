@@ -13,10 +13,12 @@ exports.createPages = ({ graphql, actions }) => {
                 node {
                   id
                   tableOfContents
-                  ... on File {
-                    absolutePath
-                    name
-                    sourceInstanceName
+                  parent {
+                    ... on File {
+                      absolutePath
+                      name
+                      sourceInstanceName
+                    }
                   }
                   code {
                     scope
