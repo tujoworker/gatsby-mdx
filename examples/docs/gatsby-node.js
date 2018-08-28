@@ -13,7 +13,12 @@ exports.createPages = ({ graphql, actions }) => {
                 node {
                   id
                   tableOfContents
-                  fileAbsolutePath
+                  parent {
+                    ... on File {
+                      absolutePath
+                    }
+                  }
+
                   fields {
                     slug
                   }
@@ -41,7 +46,7 @@ exports.createPages = ({ graphql, actions }) => {
               __dirname
             ),
             context: {
-              absPath: node.absolutePath,
+              absPath: node.parent.absolutePath,
               tableOfContents: node.tableOfContents,
               id: node.id
             }

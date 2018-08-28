@@ -8,10 +8,12 @@ exports.createPages = ({ graphql, actions }) => {
             allMdx {
               edges {
                 node {
-                  relativePath
-                  fileAbsolutePath
-                  fileNode {
-                    name
+                  parent {
+                    ... on File {
+                      absolutePath
+                      relativePath
+                      name
+                    }
                   }
                 }
               }
