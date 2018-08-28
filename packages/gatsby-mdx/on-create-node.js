@@ -1,4 +1,5 @@
 const { isFunction } = require("lodash");
+const debug = require("debug")("gatsby-mdx:on-create-node");
 
 const defaultOptions = require("./utils/default-options");
 const createMDXNode = require("./utils/create-mdx-node");
@@ -17,22 +18,26 @@ module.exports = async (
     const transformerFn = isFunction(transformerOptions)
       ? transformerOptions
       : transformerOptions.transformer;
-
-    if (
-      isFunction(transformerOptions.filter) &&
-      transformerOptions.filter({ node })
-    ) {
-      createMDXNode(
-        {
-          createNodeId,
-          getNode,
-          loadNodeContent,
-          node,
-          transform: transformerFn
-        },
-        actions,
-        { __internalMdxTypeName: "Mdx", ...pluginOptions }
-      );
+    const filterFn = transformerOptions ? transformerOptions.filter : undefined;
+    debug(
+      `${node.internal.type} has transformerFn ${isFunction(transformerFn)}`
+    );
+    debug(`${node.internal.type} has filterFn ${isFunction(filterFn)}`);
+    if (transformerFn) {
+      if ((isFunction(filterFn) && filterFn({ node })) || !filterFn) {
+        debug(`processing node ${node.id}`);
+        await createMDXNode(
+          {
+            createNodeId,
+            getNode,
+            loadNodeContent,
+            node,
+            transform: transformerFn
+          },
+          actions,
+          { __internalMdxTypeName: "Mdx", ...pluginOptions }
+        );
+      }
     }
   }
 };

@@ -1,4 +1,6 @@
 const crypto = require("crypto");
+const debug = require("debug")("gatsby-mdx:utils/create-mdx-node");
+
 const mdx = require("./mdx");
 const extractExports = require("./extract-exports");
 
@@ -8,6 +10,7 @@ module.exports = async (
   { __internalMdxTypeName, ...options }
 ) => {
   const nodeType = __internalMdxTypeName || `${node.internal.type}Mdx`;
+  debug(`creating node for nodeType \`${nodeType}\``);
   const { meta, content: nodeContent } = await transform({
     node,
     getNode,
