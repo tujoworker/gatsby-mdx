@@ -69,7 +69,7 @@ exports.onCreateNode = async ({ node, actions }) => {
   const { createNodeField } = actions;
 
   if (node.internal.type === `Mdx`) {
-    const value = node.fileNode.relativePath.replace(node.fileNode.ext, "");
+    const value = node.parent.relativePath.replace(node.parent.ext, "");
     createNodeField({
       name: `slug`,
       node,
