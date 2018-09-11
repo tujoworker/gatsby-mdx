@@ -6,7 +6,7 @@ import MDXRenderer from "gatsby-mdx/mdx-renderer";
 
 export default class MDXRuntimeMultiTest extends Component {
   render() {
-    const { children, __mdxScope, data, ...props } = this.props;
+    const { children, data, ...props } = this.props;
     return (
       <div>
         <h1>Uses MDXRenderer</h1>
@@ -21,7 +21,6 @@ export default class MDXRuntimeMultiTest extends Component {
               <MDXRenderer
                 {...props}
                 pageContext={{ tableOfContents: node.tableOfContents }}
-                scope={__mdxScope}
               >
                 {node.code.body}
               </MDXRenderer>

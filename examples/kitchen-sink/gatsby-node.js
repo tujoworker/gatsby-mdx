@@ -1,4 +1,4 @@
-const componentWithMDXScope = require("gatsby-mdx/component-with-mdx-scope");
+const pageWithMDX = require("gatsby-mdx/page-with-mdx");
 const path = require("path");
 
 exports.createPages = ({ graphql, actions }) => {
@@ -34,31 +34,29 @@ exports.createPages = ({ graphql, actions }) => {
 
         // Create blog posts pages.
         result.data.allMdx.edges.forEach(({ node }) => {
-          createPage({
-            path: `/${node.parent.sourceInstanceName}/${node.parent.name}`,
-            component: componentWithMDXScope(
-              path.resolve("./src/components/mdx-runtime-test.js"),
-              node.code.scope,
-              __dirname
-            ),
-            context: {
-              absPath: node.parent.absolutePath,
-              tableOfContents: node.tableOfContents,
-              id: node.id
-            }
-          });
+          createPage(
+            pageWithMDX({
+              path: `/${node.parent.sourceInstanceName}/${node.parent.name}`,
+              component: path.resolve("./src/components/mdx-runtime-test.js"),
+              context: {
+                absPath: node.parent.absolutePath,
+                tableOfContents: node.tableOfContents,
+                id: node.id
+              }
+            })
+          );
         });
 
         // manually create a page with a lot of mdx
-        createPage({
-          path: `/generated/multi-mdx`,
-          component: componentWithMDXScope(
-            path.resolve("./src/components/mdx-runtime-multi-test.js"),
-            result.data.allMdx.edges.map(({ node }) => node.code.scope),
-            __dirname
-          ),
-          context: {}
-        });
+        createPage(
+          pageWithMDX({
+            path: `/generated/multi-mdx`,
+            component: path.resolve(
+              "./src/components/mdx-runtime-multi-test.js"
+            ),
+            context: {}
+          })
+        );
       })
     );
   });
