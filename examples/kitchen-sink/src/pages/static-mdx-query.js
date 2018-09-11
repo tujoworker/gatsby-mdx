@@ -15,7 +15,7 @@ export default function anotherPage() {
       render={data => {
         return (
           <div>
-            <MDXRenderer>{data.mdx.code.body}</MDXRenderer>
+            <MDXRenderer>{data.mdx.code}</MDXRenderer>
           </div>
         );
       }}
