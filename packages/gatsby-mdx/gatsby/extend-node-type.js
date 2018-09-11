@@ -194,119 +194,80 @@ ${code}`;
 
     return resolve({
       code: {
-        resolve(mdxNode) {
-          return mdxNode;
-        },
-        type: new GraphQLObjectType({
-          name: `MDXCode${type.name}`,
-          fields: {
-            raw: {
-              type: GraphQLString,
-              resolve(markdownNode) {
-                return getCode(markdownNode);
-              }
+        type: GraphQLJSON,
+        async resolve(mdxNode) {
+          const rawCode = getCode(mdxNode);
+
+          const { content } = grayMatter(mdxNode.rawBody);
+          let code = await rawMDXWithGatsbyRemarkPlugins(
+            content,
+            {
+              ...options
             },
-            body: {
-              type: GraphQLString,
-              async resolve(mdxNode) {
-                /* await mutateNode({
-                 *   pluginOptions,
-                 *   mdxNode,
-                 *   files: getNodes().filter(n => n.internal.type === `File`),
-                 *   getNode,
-                 *   reporter,
-                 *   cache
-                 * }); */
+            mdxNode
+          );
 
-                const { content } = grayMatter(mdxNode.rawBody);
+          const instance = new BabelPluginPluckImports();
+          const result = babel.transform(code, {
+            plugins: [instance.plugin, objRestSpread],
+            presets: [require("@babel/preset-react")]
+          });
 
-                let code = await rawMDXWithGatsbyRemarkPlugins(
-                  content,
-                  {
-                    ...options
-                  },
-                  mdxNode
-                );
+          // TODO: be more sophisticated about these replacements
+          const body = result.code
+            .replace("export default", "return")
+            .replace(/\nexport /g, "\n");
 
-                const instance = new BabelPluginPluckImports();
-                const result = babel.transform(code, {
-                  plugins: [instance.plugin, objRestSpread],
-                  presets: [require("@babel/preset-react")]
-                });
+          const CACHE_DIR = `.cache`;
+          const PLUGIN_DIR = `gatsby-mdx`;
+          const REMOTE_MDX_DIR = `remote-mdx-dir`;
 
-                // TODO: be more sophisticated about these replacements
-                return result.code
-                  .replace("export default", "return")
-                  .replace(/\nexport /g, "\n");
-              }
-            },
-            scope: {
-              type: GraphQLString,
-              async resolve(mdxNode) {
-                const CACHE_DIR = `.cache`;
-                const PLUGIN_DIR = `gatsby-mdx`;
-                const REMOTE_MDX_DIR = `remote-mdx-dir`;
+          mkdirp.sync(
+            path.join(options.root, CACHE_DIR, PLUGIN_DIR, REMOTE_MDX_DIR)
+          );
+          const createFilePath = (directory, filename, ext) =>
+            path.join(
+              directory,
+              CACHE_DIR,
+              PLUGIN_DIR,
+              REMOTE_MDX_DIR,
+              `${filename}${ext}`
+            );
 
-                mkdirp.sync(
-                  path.join(options.root, CACHE_DIR, PLUGIN_DIR, REMOTE_MDX_DIR)
-                );
-                const createFilePath = (directory, filename, ext) =>
-                  path.join(
-                    directory,
-                    CACHE_DIR,
-                    PLUGIN_DIR,
-                    REMOTE_MDX_DIR,
-                    `${filename}${ext}`
-                  );
+          const createHash = str =>
+            crypto
+              .createHash(`md5`)
+              .update(str)
+              .digest(`hex`);
 
-                const createHash = str =>
-                  crypto
-                    .createHash(`md5`)
-                    .update(str)
-                    .digest(`hex`);
-
-                const { content } = grayMatter(mdxNode.rawBody);
-
-                let code = await rawMDXWithGatsbyRemarkPlugins(
-                  content,
-                  {
-                    ...options
-                  },
-                  mdxNode
-                );
-
-                const instance = new BabelPluginPluckImports();
-                babel.transform(code, {
-                  plugins: [instance.plugin, objRestSpread],
-                  presets: [require("@babel/preset-react")]
-                });
-
-                const identifiers = Array.from(instance.state.identifiers);
-                const imports = Array.from(instance.state.imports);
-                if (!identifiers.includes("React")) {
-                  identifiers.push("React");
-                  imports.push("import React from 'react'");
-                }
-                if (!identifiers.includes("MDXTag")) {
-                  identifiers.push("MDXTag");
-                  imports.push("import { MDXTag } from '@mdx-js/tag'");
-                }
-                const scopeFileContent = `${imports.join("\n")}
+          const identifiers = Array.from(instance.state.identifiers);
+          const imports = Array.from(instance.state.imports);
+          if (!identifiers.includes("React")) {
+            identifiers.push("React");
+            imports.push("import React from 'react'");
+          }
+          if (!identifiers.includes("MDXTag")) {
+            identifiers.push("MDXTag");
+            imports.push("import { MDXTag } from '@mdx-js/tag'");
+          }
+          const scopeFileContent = `${imports.join("\n")}
 
 export default { ${identifiers.join(", ")} }`;
 
-                const filePath = createFilePath(
-                  options.root,
-                  createHash(scopeFileContent),
-                  ".js"
-                );
+          const scopeLocation = createFilePath(
+            options.root,
+            createHash(scopeFileContent),
+            ".js"
+          );
 
-                fs.writeFileSync(filePath, scopeFileContent);
-                return filePath;
-              }
-            }
-          }
-        })
+          fs.writeFileSync(scopeLocation, scopeFileContent);
+
+          return {
+            raw: rawCode,
+            body,
+            scope: scopeLocation
+          };
+        }
       },
       excerpt: {
         type: GraphQLString,
