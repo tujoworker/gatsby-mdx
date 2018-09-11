@@ -23,6 +23,13 @@ exports.onCreatePage = require("./gatsby/on-create-page");
 exports.onCreateWebpackConfig = require("./gatsby/create-webpack-config");
 
 /**
+ * Make graphql function glboal for the static and page loaders
+ */
+exports.createPages = ({ graphql }) => {
+  global.graphql = graphql;
+};
+
+/**
  * Add the MDX extensions as resolvable. This is how the page creator
  * determines which files in the pages/ directory get built as pages.
  */
