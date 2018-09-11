@@ -263,6 +263,7 @@ export default { ${identifiers.join(", ")} }`;
           fs.writeFileSync(scopeLocation, scopeFileContent);
 
           return {
+            _mdxCode: true,
             raw: rawCode,
             body,
             scope: scopeLocation
