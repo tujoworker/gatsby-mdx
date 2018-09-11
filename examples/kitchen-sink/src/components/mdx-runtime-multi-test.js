@@ -22,7 +22,7 @@ export default class MDXRuntimeMultiTest extends Component {
                 {...props}
                 pageContext={{ tableOfContents: node.tableOfContents }}
               >
-                {node.code.body}
+                {node.code}
               </MDXRenderer>
             </div>
           ))}

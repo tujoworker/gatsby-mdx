@@ -2,13 +2,17 @@ const path = require("path");
 const escapeStringRegexp = require("escape-string-regexp");
 const defaultOptions = require("../utils/default-options");
 
-module.exports = (
-  { stage, loaders, actions, plugins, ...other },
-  pluginOptions
-) => {
+module.exports = (props, pluginOptions) => {
+  const { stage, loaders, actions, plugins, getNodes, store } = props;
   const options = defaultOptions(pluginOptions);
-  const testPattern = new RegExp(
+  const testMDXPattern = new RegExp(
     options.extensions.map(ext => `${escapeStringRegexp(ext)}$`).join("|")
+  );
+  const resolvableExtensions = new RegExp(
+    store
+      .getState()
+      .program.extensions.map(ext => `${escapeStringRegexp(ext)}$`)
+      .join("|")
   );
 
   actions.setWebpackConfig({
@@ -20,7 +24,7 @@ module.exports = (
           use: [loaders.js()]
         },
         {
-          test: /\.js$/,
+          test: resolvableExtensions,
           use: [
             {
               loader: "gatsby-mdx/loaders/static-graphql-mdx-loader",
@@ -32,7 +36,7 @@ module.exports = (
           ]
         },
         {
-          test: /\.js$/,
+          test: resolvableExtensions,
           use: [
             {
               loader: "gatsby-mdx/loaders/page-graphql-mdx-loader",
@@ -44,13 +48,13 @@ module.exports = (
           ]
         },
         {
-          test: testPattern,
+          test: testMDXPattern,
           use: [
             loaders.js(),
             {
               loader: "gatsby-mdx/loaders/mdx-loader",
               options: {
-                ...other,
+                ...props,
                 pluginOptions: options
               }
             }
