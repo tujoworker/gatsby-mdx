@@ -8,10 +8,7 @@ export default function anotherPage() {
       query={graphql`
         query {
           mdx(id: { eq: "c9610a63-e336-5fdc-b2ca-abe0e4143e22" }) {
-            code {
-              scope
-              body
-            }
+            code
           }
         }
       `}

@@ -13,9 +13,7 @@ exports.createPages = ({ graphql, actions }) => {
                 node {
                   id
                   tableOfContents
-                  code {
-                    scope
-                  }
+                  code
                   parent {
                     ... on File {
                       absolutePath

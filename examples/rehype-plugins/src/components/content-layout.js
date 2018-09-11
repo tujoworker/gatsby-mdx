@@ -27,9 +27,7 @@ export const pageQuery = graphql`
   query($id: String!) {
     mdx(id: { eq: $id }) {
       id
-      code {
-        body
-      }
+      code
     }
   }
 `

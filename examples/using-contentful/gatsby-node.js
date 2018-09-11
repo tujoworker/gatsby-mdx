@@ -18,9 +18,7 @@ exports.createPages = ({ graphql, actions }) => {
               edges {
                 node {
                   id
-                  code {
-                    scope
-                  }
+                  code
                   meta {
                     title
                   }
@@ -33,9 +31,7 @@ exports.createPages = ({ graphql, actions }) => {
             ) {
               edges {
                 node {
-                  code {
-                    scope
-                  }
+                  code
                   fields {
                     slug
                   }

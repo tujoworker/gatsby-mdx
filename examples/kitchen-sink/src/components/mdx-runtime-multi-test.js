@@ -39,9 +39,7 @@ export const pageQuery = graphql`
       edges {
         node {
           id
-          code {
-            body
-          }
+          code
           tableOfContents
         }
       }

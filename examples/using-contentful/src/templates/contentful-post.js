@@ -83,9 +83,7 @@ export const pageQuery = graphql`
     mdx: contentfulBlogPostMdx(id: { eq: $id }) {
       id
       excerpt
-      code {
-        body
-      }
+      code
       meta {
         title
       }
