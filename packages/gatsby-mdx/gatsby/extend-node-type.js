@@ -266,7 +266,8 @@ export default { ${identifiers.join(", ")} }`;
             _mdxCode: true,
             raw: rawCode,
             body,
-            scope: scopeLocation
+            scope: scopeLocation,
+            scopeId: `__mdxScope_${createHash(scopeFileContent)}`
           };
         }
       },
