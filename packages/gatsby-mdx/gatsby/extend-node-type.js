@@ -27,7 +27,7 @@ const babel = require("@babel/core");
 const rawMDX = require("@mdx-js/mdx");
 
 const debug = require("debug")("gatsby-mdx:extend-node-type");
-const mdx = require("../utils/mdx");
+// const mdx = require("../utils/mdx");
 const getTableOfContents = require("../utils/get-table-of-content");
 const defaultOptions = require("../utils/default-options");
 const getSourcePluginsAsRemarkPlugins = require("../utils/get-source-plugins-as-remark-plugins");
@@ -122,26 +122,26 @@ module.exports = (
       return remark().stringify(textAst);
     }
 
-    async function getCode(mdxNode, overrideOptions) {
-      /* await mutateNode({
-       *   pluginOptions,
-       *   mdxNode,
-       *   files: getNodes().filter(n => n.internal.type === `File`),
-       *   getNode,
-       *   reporter,
-       *   cache
-       * }); */
-
-      const code = await mdx(mdxNode.rawBody, {
-        ...options,
-        ...overrideOptions
-      });
-
-      return `import React from 'react'
-import { MDXTag } from '@mdx-js/tag'
-
-${code}`;
-    }
+    // async function getCode(mdxNode, overrideOptions) {
+    //   /* await mutateNode({
+    //    *   pluginOptions,
+    //    *   mdxNode,
+    //    *   files: getNodes().filter(n => n.internal.type === `File`),
+    //    *   getNode,
+    //    *   reporter,
+    //    *   cache
+    //    * }); */
+    //
+    //   const code = await mdx(mdxNode.rawBody, {
+    //     ...options,
+    //     ...overrideOptions
+    //   });
+    //
+    //  return `import React from 'react'
+    // import { MDXTag } from '@mdx-js/tag'
+    //
+    // ${code}`;
+    //    }
 
     const HeadingType = new GraphQLObjectType({
       name: `MdxHeading${type.name}`,
@@ -196,8 +196,6 @@ ${code}`;
       code: {
         type: GraphQLJSON,
         async resolve(mdxNode) {
-          const rawCode = getCode(mdxNode);
-
           const { content } = grayMatter(mdxNode.rawBody);
           let code = await rawMDXWithGatsbyRemarkPlugins(
             content,
@@ -264,7 +262,6 @@ export default { ${identifiers.join(", ")} }`;
 
           return {
             _mdxCode: true,
-            raw: rawCode,
             body,
             scope: scopeLocation,
             scopeId: `__mdxScope_${createHash(scopeFileContent)}`
