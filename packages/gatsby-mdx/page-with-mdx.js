@@ -1,50 +1,35 @@
-const mkdirp = require("mkdirp");
 const fs = require("fs");
+const crypto = require("crypto");
 const path = require("path");
-const babel = require("@babel/core");
-const syntaxObjRestSpread = require("@babel/plugin-syntax-object-rest-spread");
-const debug = require("debug")("gatsby-mdx:page-width-mdx");
-const BabelPluginPluckExports = require("babel-plugin-pluck-exports");
+const debug = require("debug")("gatsby-mdx:page-with-mdx");
+const { MDX_WRAPPERS_LOCATION } = require("./constants");
 
-const CACHE_DIR = `.cache`;
-const PLUGIN_DIR = `gatsby-mdx`;
-const MDX_WRAPPERS_DIR = `mdx-wrappers-dir`;
+const createWrapper = ({ originalFile, path }) =>
+  `// MDX WRAPPER
+// ${originalFile}
+// ${path}`;
 
 module.exports = function pageWithMDX(pageConfig) {
-  mkdirp.sync(
-    path.join(process.cwd(), CACHE_DIR, PLUGIN_DIR, MDX_WRAPPERS_DIR)
+  const componentHash = crypto
+    .createHash(`md5`)
+    .update(pageConfig.component)
+    .digest(`hex`);
+
+  const wrapperLocation = path.join(
+    MDX_WRAPPERS_LOCATION,
+    `${componentHash}.js`
   );
 
-  const absPathToNewWrapper = path.join(
-    process.cwd(),
-    CACHE_DIR,
-    PLUGIN_DIR,
-    MDX_WRAPPERS_DIR,
-    `${encodeURIComponent(pageConfig.path)}${".js"}`
-  );
+  const newWrapper = createWrapper({
+    originalFile: pageConfig.component,
+    path: pageConfig.path
+  });
 
-  // hoist pageQuery and any other named exports
-  const OGWrapper = fs.readFileSync(pageConfig.component, "utf-8");
-  const instance = new BabelPluginPluckExports();
-  babel.transform(OGWrapper, {
-    plugins: [instance.plugin, syntaxObjRestSpread],
-    presets: [require("@babel/preset-react")]
-  }).code;
+  fs.writeFileSync(wrapperLocation, newWrapper);
 
-  const newWrapper = `// MDX wrapper
-// ${pageConfig.component}
-
-import { graphql } from 'gatsby'
-
-${instance.state.exports.map(exportString => exportString)}`;
-
-  fs.writeFileSync(absPathToNewWrapper, newWrapper);
-
-  debug(
-    `wrapper "${absPathToNewWrapper}" created from "${pageConfig.component}"`
-  );
+  debug(`wrapper "${wrapperLocation}" created from "${pageConfig.component}"`);
   return {
     ...pageConfig,
-    component: absPathToNewWrapper
+    component: wrapperLocation
   };
 };
