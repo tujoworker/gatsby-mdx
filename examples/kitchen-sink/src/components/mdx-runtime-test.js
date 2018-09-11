@@ -20,7 +20,7 @@ export default class MDXRuntimeTest extends Component {
         <div>
           <h1>Uses MDXRenderer</h1>
           <div>{children}</div>
-          <MDXRenderer {...props}>{data.mdx.code}</MDXRenderer>
+          <MDXRenderer {...props}>{data.file.childMdx.code}</MDXRenderer>
         </div>
       </MDXProvider>
     );
@@ -28,10 +28,11 @@ export default class MDXRuntimeTest extends Component {
 }
 
 export const pageQuery = graphql`
-  query($id: String!) {
-    mdx(id: { eq: $id }) {
-      id
-      code
+  query($fileId: String!) {
+    file(id: { eq: $fileId }) {
+      childMdx {
+        code
+      }
     }
   }
 `;

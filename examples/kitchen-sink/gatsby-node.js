@@ -15,6 +15,7 @@ exports.createPages = ({ graphql, actions }) => {
                   tableOfContents
                   parent {
                     ... on File {
+                      id
                       absolutePath
                       name
                       sourceInstanceName
@@ -39,6 +40,7 @@ exports.createPages = ({ graphql, actions }) => {
               path: `/${node.parent.sourceInstanceName}/${node.parent.name}`,
               component: path.resolve("./src/components/mdx-runtime-test.js"),
               context: {
+                fileId: node.parent.id,
                 absPath: node.parent.absolutePath,
                 tableOfContents: node.tableOfContents,
                 id: node.id
