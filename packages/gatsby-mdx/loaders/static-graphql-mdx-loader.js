@@ -3,11 +3,13 @@
  *
  * For the next step in rendering from MDX node, see mdx-renderer.js
  */
-const { babelParseToAst } = require("../utils/babel-parse-to-ast");
+const { flatten } = require("lodash");
 const traverse = require("@babel/traverse").default;
 const { getGraphQLTag } = require("babel-plugin-remove-graphql-queries");
 const stringifyGraphQL = require("gatsby/graphql").print;
 const { graphql } = global;
+const { babelParseToAst } = require("../utils/babel-parse-to-ast");
+const findScopes = require("../utils/find-scopes");
 
 // pulled from https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby/src/internal-plugins/query-runner/file-parser.js#L98
 const extractStaticQuery = taggedTemplateExpressPath => {
@@ -95,8 +97,7 @@ module.exports = async function(content) {
     results.push(await graphql(query));
   }
 
-  // findScopes
-  const scopes = results.map(({ data }) => data.mdx.code.scope);
+  const scopes = flatten(results.map(({ data }) => findScopes(data)));
 
   // if we have no mdx scopes, move on
   if (scopes.length === 0) {

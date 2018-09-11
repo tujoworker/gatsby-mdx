@@ -28,6 +28,7 @@
     "remark": "^9.0.0",
     "retext": "^5.0.0",
     "strip-markdown": "^3.0.1",
+    "traverse": "^0.6.6",
     "underscore.string": "^3.3.4",
     "unist-util-map": "^1.0.4",
     "unist-util-remove": "^1.0.1",
