@@ -1,8 +1,7 @@
 /**
- * Given any result from GraphQL, this function gathers all the scope
+ * Given any result from GraphQL, this function returns all the scope
  * values from the `code` field of MDX nodes.
  */
-
 const { isObject } = require("lodash");
 const traverse = require("traverse");
 
