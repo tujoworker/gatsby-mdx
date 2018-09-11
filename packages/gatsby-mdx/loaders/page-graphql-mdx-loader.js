@@ -5,6 +5,7 @@
  */
 const { graphql } = global;
 const { getOptions } = require("loader-utils");
+const { uniqBy } = require("lodash");
 const fs = require("fs-extra");
 const path = require("path");
 const { babelParseToAst } = require("../utils/babel-parse-to-ast");
@@ -33,7 +34,7 @@ const findPageQuery = ast => {
 };
 
 const injectScopeIntoMDXRenderer = (code, scope) =>
-  code.replace(/<MDXRenderer/g, `$& scope={${scope}}`);
+  code.replace(/<MDXRenderer/g, `$& scopes={${scope}}`);
 
 module.exports = async function(content) {
   const callback = this.async();
@@ -62,32 +63,24 @@ module.exports = async function(content) {
   );
 
   const result = await graphql(query, pageNode && pageNode.context);
-  const scopes = findScopes(result.data);
+  const scopes = uniqBy(findScopes(result.data), "scopeId");
 
   // if we have no mdx scopes, move on
   if (scopes.length === 0) {
     return callback(null, originalContent);
   }
 
-  const codeWithoutQuery = originalContent.replace("pageQuery", "meh");
-  // const codeWithoutQuery = babel.transform(originalContent, {
-  //   plugins: [instance.plugin, syntaxObjRestSpread],
-  //   presets: [require("@babel/preset-react")]
-  // }).code;
-
   const scopesImports = scopes
-    .map((path, i) => `import __mdxScope_${i} from "${path}";`)
+    .map(({ scopeId, scope }) => `import ${scopeId} from "${scope}";`)
     .join("\n");
 
   const singleScopeObject = `{${scopes
-    .map((_, i) => `...__mdxScope_${i}`)
+    .map(({ scopeId }) => scopeId)
     .join(", ")}}`;
 
   const code = `${scopesImports}
 
-${injectScopeIntoMDXRenderer(codeWithoutQuery, singleScopeObject)}
-
-${content.split("import { graphql } from 'gatsby'")[1]}`;
+${injectScopeIntoMDXRenderer(originalContent, singleScopeObject)}`;
 
   return callback(null, code);
 };

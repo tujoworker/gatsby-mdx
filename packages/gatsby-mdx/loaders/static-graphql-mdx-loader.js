@@ -4,13 +4,13 @@
  * For the next step in rendering from MDX node, see mdx-renderer.js
  */
 const { graphql } = global;
-const { flatten } = require("lodash");
+const { flatten, uniqBy } = require("lodash");
 const { babelParseToAst } = require("../utils/babel-parse-to-ast");
 const findStaticQueries = require("../utils/find-static-queries");
 const findScopes = require("../utils/find-scopes");
 
 const injectScopeIntoMDXRenderer = (code, scope) =>
-  code.replace(/<MDXRenderer/g, `$& scope={${scope}}`);
+  code.replace(/<MDXRenderer/g, `$& scopes={${scope}}`);
 
 module.exports = async function(content) {
   const callback = this.async();
@@ -29,7 +29,10 @@ module.exports = async function(content) {
     results.push(await graphql(query));
   }
 
-  const scopes = flatten(results.map(({ data }) => findScopes(data)));
+  const scopes = uniqBy(
+    flatten(results.map(({ data }) => findScopes(data))),
+    "scopeId"
+  );
 
   // if we have no mdx scopes, move on
   if (scopes.length === 0) {
@@ -37,11 +40,11 @@ module.exports = async function(content) {
   }
 
   const scopesImports = scopes
-    .map((path, i) => `import __mdxScope_${i} from "${path}";`)
+    .map(({ scopeId, scope }) => `import ${scopeId} from "${scope}";`)
     .join("\n");
 
   const singleScopeObject = `{${scopes
-    .map((_, i) => `...__mdxScope_${i}`)
+    .map(({ scopeId }) => scopeId)
     .join(", ")}}`;
 
   const code = `${scopesImports}
