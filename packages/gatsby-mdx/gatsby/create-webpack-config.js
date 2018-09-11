@@ -20,6 +20,18 @@ module.exports = (
           use: [loaders.js()]
         },
         {
+          test: /\.js$/,
+          use: [
+            {
+              loader: "gatsby-mdx/loaders/static-graphql-mdx-loader",
+              options: {
+                getNodes,
+                pluginOptions: options
+              }
+            }
+          ]
+        },
+        {
           test: testPattern,
           use: [
             loaders.js(),

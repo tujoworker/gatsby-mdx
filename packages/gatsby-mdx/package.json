@@ -16,6 +16,7 @@
     "babel-plugin-gather-exports": "0.0.1",
     "babel-plugin-pluck-exports": "0.0.1",
     "babel-plugin-pluck-imports": "0.0.1",
+    "babel-plugin-remove-graphql-queries": "^2.0.2-rc.3",
     "debug": "^3.1.0",
     "escape-string-regexp": "^1.0.5",
     "fs-extra": "^7.0.0",
