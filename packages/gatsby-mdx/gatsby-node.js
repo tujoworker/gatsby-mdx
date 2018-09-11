@@ -1,6 +1,8 @@
 const path = require("path");
+const mkdirp = require("mkdirp");
 const defaultOptions = require("./utils/default-options");
 const mdx = require("./utils/mdx");
+const { MDX_WRAPPERS_LOCATION, MDX_SCOPES_LOCATION } = require("./constants");
 
 /**
  * Create Mdx nodes from MDX files.
@@ -21,6 +23,16 @@ exports.onCreatePage = require("./gatsby/on-create-page");
  * Add the webpack config for loading MDX files
  */
 exports.onCreateWebpackConfig = require("./gatsby/create-webpack-config");
+
+/**
+ * Create the cache directories
+ */
+
+exports.onPreBootstrap = () => {
+  mkdirp.sync(MDX_WRAPPERS_LOCATION);
+
+  mkdirp.sync(MDX_SCOPES_LOCATION);
+};
 
 /**
  * Make graphql function glboal for the static and page loaders
