@@ -12,7 +12,7 @@ Some content
 
 export const pageQuery = graphql`
 query {
-  mdx(frontmatter:{title:{eq:"1234"}}) {
+  mdx(frontmatter:{name:{eq:"non-page"}}) {
     code
   }
 }

@@ -7,7 +7,7 @@ export default function anotherPage() {
     <StaticQuery
       query={graphql`
         query staticQuery {
-          mdx(id: { eq: "c9610a63-e336-5fdc-b2ca-abe0e4143e22" }) {
+          mdx(frontmatter: { name: { eq: "non-page" } }) {
             code
           }
         }
