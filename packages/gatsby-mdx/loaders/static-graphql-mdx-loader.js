@@ -6,6 +6,7 @@
 const crypto = require("crypto");
 const { graphql } = global;
 const { flatten, uniqBy } = require("lodash");
+const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
 const { babelParseToAst } = require("../utils/babel-parse-to-ast");
 const findStaticQueries = require("../utils/find-static-queries");
 const findScopes = require("../utils/find-scopes");
@@ -13,7 +14,34 @@ const findScopes = require("../utils/find-scopes");
 module.exports = async function(content) {
   const callback = this.async();
   const file = this.resourcePath;
-  const ast = babelParseToAst(content, file);
+
+  let ast;
+  const transpiled = await apiRunnerNode(`preprocessSource`, {
+    filename: file,
+    contents: content
+  });
+
+  if (transpiled && transpiled.length) {
+    for (const item of transpiled) {
+      try {
+        const tmp = babelParseToAst(item, file);
+        ast = tmp;
+        break;
+      } catch (error) {
+        continue;
+      }
+    }
+  } else {
+    try {
+      ast = babelParseToAst(content, file);
+    } catch (error) {
+      // silently fail
+    }
+  }
+
+  if (!ast) {
+    return callback(null, content);
+  }
 
   const queries = findStaticQueries(ast);
   const results = [];
