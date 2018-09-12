@@ -7,31 +7,10 @@ const { graphql } = global;
 const { getOptions } = require("loader-utils");
 const { uniqBy } = require("lodash");
 const fs = require("fs-extra");
-const path = require("path");
 const { babelParseToAst } = require("../utils/babel-parse-to-ast");
 const findScopes = require("../utils/find-scopes");
-const traverse = require("@babel/traverse").default;
-const stringifyGraphQL = require("gatsby/graphql").print;
-const { getGraphQLTag } = require("babel-plugin-remove-graphql-queries");
-
-const findPageQuery = ast => {
-  let pageQuery;
-
-  traverse(ast, {
-    ExportNamedDeclaration(path) {
-      path.traverse({
-        TaggedTemplateExpression(innerPath) {
-          const { ast: gqlAst } = getGraphQLTag(innerPath);
-          if (!gqlAst) return;
-
-          pageQuery = stringifyGraphQL(gqlAst);
-        }
-      });
-    }
-  });
-
-  return pageQuery;
-};
+const findPageQuery = require("../utils/find-page-query");
+const { WRAPPER_START } = require("../constants");
 
 const injectScopeIntoMDXRenderer = (code, scope) =>
   code.replace(/<MDXRenderer/g, `$& scopes={${scope}}`);
@@ -41,21 +20,23 @@ module.exports = async function(content) {
   const { getNodes } = getOptions(this);
   const file = this.resourcePath;
 
-  if (!content.startsWith("// MDX wrapper")) return callback(null, content);
+  if (!content.startsWith(WRAPPER_START)) {
+    return callback(null, content);
+  }
 
-  const originalFile = content
-    .replace("// MDX wrapper\n// ", "")
-    .split("\n")[0];
+  const [, originalFile, urlPath] = content
+    .replace(WRAPPER_START, "")
+    .split("\n// ");
+
   this.addDependency(originalFile);
-  const originalContent = await fs.readFile(originalFile, "utf8");
+  content = await fs.readFile(originalFile, "utf8");
 
-  const ast = babelParseToAst(originalContent, file);
+  const ast = babelParseToAst(content, file);
   const query = findPageQuery(ast);
-  const urlPath = decodeURIComponent(path.basename(file).split(".")[0]);
 
   // if we have no page query, move on
   if (!query) {
-    return callback(null, originalContent);
+    return callback(null, content);
   }
 
   const pageNode = getNodes().find(
@@ -67,7 +48,7 @@ module.exports = async function(content) {
 
   // if we have no mdx scopes, move on
   if (scopes.length === 0) {
-    return callback(null, originalContent);
+    return callback(null, content);
   }
 
   const scopesImports = scopes
@@ -80,7 +61,7 @@ module.exports = async function(content) {
 
   const code = `${scopesImports}
 
-${injectScopeIntoMDXRenderer(originalContent, singleScopeObject)}`;
+${injectScopeIntoMDXRenderer(content, singleScopeObject)}`;
 
   return callback(null, code);
 };

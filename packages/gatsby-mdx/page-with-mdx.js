@@ -2,17 +2,28 @@ const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
 const debug = require("debug")("gatsby-mdx:page-with-mdx");
-const { MDX_WRAPPERS_LOCATION } = require("./constants");
+const { WRAPPER_START, MDX_WRAPPERS_LOCATION } = require("./constants");
 
-const createWrapper = ({ originalFile, path }) =>
-  `// MDX WRAPPER
-// ${originalFile}
-// ${path}`;
+/**
+ * Create a template that has a reference to the page url and
+ * original component so we can link back to it.
+ *
+ * It has a pageQuery so that Gatsby tries to export and run the query.
+ *
+ * We replace the query in preprocessSource and we replace the content
+ * in the loaders/page-graphql-mdx-loader.js
+ */
+const createWrapper = ({ component, path }) =>
+  `${WRAPPER_START}
+// ${component}
+// ${path}
+// 
+export const pageQuery = graphql\`\``;
 
 module.exports = function pageWithMDX(pageConfig) {
   const componentHash = crypto
     .createHash(`md5`)
-    .update(pageConfig.component)
+    .update(pageConfig.path)
     .digest(`hex`);
 
   const wrapperLocation = path.join(
@@ -21,7 +32,7 @@ module.exports = function pageWithMDX(pageConfig) {
   );
 
   const newWrapper = createWrapper({
-    originalFile: pageConfig.component,
+    component: pageConfig.component,
     path: pageConfig.path
   });
 

@@ -1,8 +1,13 @@
 const path = require("path");
 const mkdirp = require("mkdirp");
+const fs = require("fs-extra");
 const defaultOptions = require("./utils/default-options");
 const mdx = require("./utils/mdx");
-const { MDX_WRAPPERS_LOCATION, MDX_SCOPES_LOCATION } = require("./constants");
+const {
+  WRAPPER_START,
+  MDX_WRAPPERS_LOCATION,
+  MDX_SCOPES_LOCATION
+} = require("./constants");
 
 /**
  * Create Mdx nodes from MDX files.
@@ -30,7 +35,6 @@ exports.onCreateWebpackConfig = require("./gatsby/create-webpack-config");
 
 exports.onPreBootstrap = () => {
   mkdirp.sync(MDX_WRAPPERS_LOCATION);
-
   mkdirp.sync(MDX_SCOPES_LOCATION);
 };
 
@@ -48,9 +52,6 @@ exports.createPages = ({ graphql }) => {
 exports.resolvableExtensions = (data, pluginOptions) =>
   defaultOptions(pluginOptions).extensions;
 
-/**
- * Convert MDX to JSX so that Gatsby can extract the GraphQL queries.
- */
 exports.preprocessSource = async function preprocessSource(
   { filename, contents },
   pluginOptions
@@ -58,10 +59,25 @@ exports.preprocessSource = async function preprocessSource(
   const { extensions, ...options } = defaultOptions(pluginOptions);
   const ext = path.extname(filename);
 
+  /**
+   * Convert MDX to JSX so that Gatsby can extract the GraphQL queries.
+   */
   if (extensions.includes(ext)) {
     const code = await mdx(contents, options);
     return code;
   }
+
+  /**
+   * Intercept MDX wrappers and pass through the original component so the
+   * query can be extracted correctly
+   */
+  if (contents.startsWith(WRAPPER_START)) {
+    const [, originalFile] = contents.replace(WRAPPER_START, "").split("\n// ");
+
+    const code = await fs.readFile(originalFile, "utf8");
+    return code;
+  }
+
   return null;
 };
 
