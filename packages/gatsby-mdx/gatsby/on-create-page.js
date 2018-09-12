@@ -84,7 +84,7 @@ module.exports = async ({ page, actions, store }, pluginOptions) => {
     }
 
     // check if the query has anything that ends in mdx and has a code field
-    if (/mdx(.*){(.|\s)*\s*code/gi.test(query)) {
+    if (/mdx(.*){/gi.test(query) && query.includes("code")) {
       deletePage(page);
       createPage(pageWithMDX(page));
     }
