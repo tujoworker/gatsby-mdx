@@ -3,6 +3,7 @@
  *
  * For the next step in rendering from MDX node, see mdx-renderer.js
  */
+const crypto = require("crypto");
 const { graphql } = global;
 const { getOptions } = require("loader-utils");
 const { uniqBy } = require("lodash");
@@ -26,14 +27,27 @@ module.exports = async function(content) {
     .split("\n// ");
 
   this.addDependency(originalFile);
-  content = await fs.readFile(originalFile, "utf8");
+  const originalContent = await fs.readFile(originalFile, "utf8");
 
-  const ast = babelParseToAst(content, file);
+  const oldHash = (content.split("\n// hash ") || ["", ""])[1];
+  const newHash = crypto
+    .createHash(`md5`)
+    .update(originalContent)
+    .digest(`hex`);
+
+  if (oldHash !== newHash) {
+    await fs.writeFile(
+      file,
+      `${content.split("\n// hash ")[0]}\n${`// hash ${newHash}`}`
+    );
+  }
+
+  const ast = babelParseToAst(originalContent, file);
   const query = findPageQuery(ast);
 
   // if we have no page query, move on
   if (!query) {
-    return callback(null, content);
+    return callback(null, originalContent);
   }
 
   const pageNode = getNodes().find(
@@ -45,7 +59,7 @@ module.exports = async function(content) {
 
   // if we have no mdx scopes, move on
   if (scopes.length === 0) {
-    return callback(null, content);
+    return callback(null, originalContent);
   }
 
   const scopesImports = scopes
