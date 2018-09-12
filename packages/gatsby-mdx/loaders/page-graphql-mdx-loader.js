@@ -66,16 +66,7 @@ module.exports = async function(content) {
     }
   }
 
-  if (!ast) {
-    return callback(null, originalContent);
-  }
-
   const query = findPageQuery(ast);
-
-  // if we have no page query, move on
-  if (!query) {
-    return callback(null, originalContent);
-  }
 
   const pageNode = getNodes().find(
     node => node.internal.type === `SitePage` && node.path === urlPath
@@ -83,11 +74,6 @@ module.exports = async function(content) {
 
   const result = await graphql(query, pageNode && pageNode.context);
   const scopes = uniqBy(findScopes(result.data), "id");
-
-  // if we have no mdx scopes, move on
-  if (scopes.length === 0) {
-    return callback(null, originalContent);
-  }
 
   const scopesImports = scopes
     .map(({ id, location }) => `import ${id} from "${location}";`)
