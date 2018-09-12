@@ -1,5 +1,20 @@
-export default ({ children }) => <div test="success">{children}</div>
+import { graphql } from "gatsby"
+import MDXRenderer from "gatsby-mdx/mdx-renderer"
+
+export default ({ children, data }) => <div test="success">
+  <MDXRenderer>{data.mdx.code}</MDXRenderer>
+  {children}
+</div>
 
 # A title
 
 Some content
+
+export const pageQuery = graphql`
+query {
+  mdx(frontmatter:{title:{eq:"1234"}}) {
+    code
+  }
+}
+`
+ 
