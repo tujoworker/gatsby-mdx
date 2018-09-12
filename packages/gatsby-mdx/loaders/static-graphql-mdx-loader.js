@@ -29,7 +29,7 @@ module.exports = async function(content) {
 
   const scopes = uniqBy(
     flatten(results.map(({ data }) => findScopes(data))),
-    "scopeId"
+    "id"
   );
 
   // if we have no mdx scopes, move on
@@ -38,10 +38,10 @@ module.exports = async function(content) {
   }
 
   const scopesImports = scopes
-    .map(({ scopeId, scope }) => `import ${scopeId} from "${scope}";`)
+    .map(({ id, location }) => `import ${id} from "${location}";`)
     .join("\n");
 
-  const mdxScopes = `{${scopes.map(({ scopeId }) => scopeId).join(", ")}}`;
+  const mdxScopes = `{${scopes.map(({ id }) => id).join(", ")}}`;
 
   const OriginalComponentId = `OriginalComponent_${crypto
     .createHash(`md5`)

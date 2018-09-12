@@ -3,11 +3,11 @@ import { withMDXScope } from "./context";
 
 export default withMDXScope(
   withMDXComponents(({ scopes = {}, components = {}, children, ...props }) => {
-    const { scopeId, body } = children;
+    const { scope, body } = children;
     const fullScope = {
       components,
       props,
-      ...scopes[scopeId]
+      ...scopes[scope.id]
     };
 
     // children is pre-compiled mdx

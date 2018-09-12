@@ -18,7 +18,8 @@ const createWrapper = ({ component, path }) =>
 // ${component}
 // ${path}
 // 
-export const pageQuery = graphql\`\``;
+export const pageQuery = graphql\`\`
+// hash `;
 
 module.exports = function pageWithMDX(pageConfig) {
   const componentHash = crypto

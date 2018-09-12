@@ -250,8 +250,10 @@ export default { ${identifiers.join(", ")} }`;
           return {
             _mdxCode: true,
             body,
-            scope: scopeLocation,
-            scopeId: `__mdxScope_${createHash(scopeFileContent)}`
+            scope: {
+              location: scopeLocation,
+              id: `__mdxScope_${createHash(scopeFileContent)}`
+            }
           };
         }
       },

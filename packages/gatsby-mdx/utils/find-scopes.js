@@ -12,7 +12,7 @@ const isMdxCode = node => {
 module.exports = graphqlResult => {
   const scopes = traverse(graphqlResult).reduce(function(acc, code) {
     if (isObject(code) && isMdxCode(this)) {
-      return [...acc, { scopeId: code.scopeId, scope: code.scope }];
+      return [...acc, code.scope];
     }
 
     return acc;

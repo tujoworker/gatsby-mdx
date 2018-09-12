@@ -29,7 +29,7 @@ module.exports = async function(content) {
   this.addDependency(originalFile);
   const originalContent = await fs.readFile(originalFile, "utf8");
 
-  const oldHash = (content.split("\n// hash ") || ["", ""])[1];
+  const oldHash = content.split("\n// hash ")[1];
   const newHash = crypto
     .createHash(`md5`)
     .update(originalContent)
@@ -55,7 +55,7 @@ module.exports = async function(content) {
   );
 
   const result = await graphql(query, pageNode && pageNode.context);
-  const scopes = uniqBy(findScopes(result.data), "scopeId");
+  const scopes = uniqBy(findScopes(result.data), "id");
 
   // if we have no mdx scopes, move on
   if (scopes.length === 0) {
@@ -63,10 +63,10 @@ module.exports = async function(content) {
   }
 
   const scopesImports = scopes
-    .map(({ scopeId, scope }) => `import ${scopeId} from "${scope}";`)
+    .map(({ id, location }) => `import ${id} from "${location}";`)
     .join("\n");
 
-  const mdxScopes = `{${scopes.map(({ scopeId }) => scopeId).join(", ")}}`;
+  const mdxScopes = `{${scopes.map(({ id }) => id).join(", ")}}`;
 
   const code = `import React from "react";
 import { MDXScopeProvider } from "gatsby-mdx/context";
