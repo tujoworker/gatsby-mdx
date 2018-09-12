@@ -74,7 +74,7 @@ export default class MDXRuntimeTest extends Component {
         <h1 css={{ fontSize: `2.5rem`, marginBottom: `2rem` }}>
           {mdx.fields.title}
         </h1>
-        <MDXRenderer>{mdx.code.body}</MDXRenderer>
+        <MDXRenderer>{mdx.code}</MDXRenderer>
         <Edit>
           <Link to={`${docsLocation}/${mdx.parent.relativePath}`}>
             <Edit3 size={16} /> edit this page on GitHub
@@ -97,9 +97,7 @@ export const pageQuery = graphql`
         id
         title
       }
-      code {
-        body
-      }
+      code
       tableOfContents
       parent {
         ... on File {
