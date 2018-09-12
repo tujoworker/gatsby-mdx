@@ -6,7 +6,7 @@ export default function anotherPage() {
   return (
     <StaticQuery
       query={graphql`
-        query {
+        query staticQuery {
           mdx(id: { eq: "c9610a63-e336-5fdc-b2ca-abe0e4143e22" }) {
             code
           }
