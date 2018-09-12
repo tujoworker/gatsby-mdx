@@ -8,6 +8,7 @@ const { graphql } = global;
 const { getOptions } = require("loader-utils");
 const { uniqBy } = require("lodash");
 const fs = require("fs-extra");
+const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
 const { babelParseToAst } = require("../utils/babel-parse-to-ast");
 const findScopes = require("../utils/find-scopes");
 const findPageQuery = require("../utils/find-page-query");
@@ -34,7 +35,6 @@ module.exports = async function(content) {
     .createHash(`md5`)
     .update(originalContent)
     .digest(`hex`);
-
   if (oldHash !== newHash) {
     await fs.writeFile(
       file,
@@ -42,7 +42,34 @@ module.exports = async function(content) {
     );
   }
 
-  const ast = babelParseToAst(originalContent, file);
+  let ast;
+  const transpiled = await apiRunnerNode(`preprocessSource`, {
+    filename: originalFile,
+    contents: originalContent
+  });
+
+  if (transpiled && transpiled.length) {
+    for (const item of transpiled) {
+      try {
+        const tmp = babelParseToAst(item, originalFile);
+        ast = tmp;
+        break;
+      } catch (error) {
+        continue;
+      }
+    }
+  } else {
+    try {
+      ast = babelParseToAst(originalContent, originalFile);
+    } catch (error) {
+      // silently fail
+    }
+  }
+
+  if (!ast) {
+    return callback(null, originalContent);
+  }
+
   const query = findPageQuery(ast);
 
   // if we have no page query, move on
