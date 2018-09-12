@@ -20,7 +20,6 @@ const prune = require("underscore.string/prune");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const mkdirp = require("mkdirp");
 const BabelPluginPluckImports = require("babel-plugin-pluck-imports");
 const objRestSpread = require("@babel/plugin-proposal-object-rest-spread");
 const babel = require("@babel/core");
@@ -31,6 +30,7 @@ const debug = require("debug")("gatsby-mdx:extend-node-type");
 const getTableOfContents = require("../utils/get-table-of-content");
 const defaultOptions = require("../utils/default-options");
 const getSourcePluginsAsRemarkPlugins = require("../utils/get-source-plugins-as-remark-plugins");
+const { MDX_SCOPES_LOCATION } = require("../constants");
 
 const stripFrontmatter = source => grayMatter(source).content;
 /* 
@@ -216,21 +216,8 @@ module.exports = (
             .replace("export default", "return")
             .replace(/\nexport /g, "\n");
 
-          const CACHE_DIR = `.cache`;
-          const PLUGIN_DIR = `gatsby-mdx`;
-          const REMOTE_MDX_DIR = `remote-mdx-dir`;
-
-          mkdirp.sync(
-            path.join(options.root, CACHE_DIR, PLUGIN_DIR, REMOTE_MDX_DIR)
-          );
           const createFilePath = (directory, filename, ext) =>
-            path.join(
-              directory,
-              CACHE_DIR,
-              PLUGIN_DIR,
-              REMOTE_MDX_DIR,
-              `${filename}${ext}`
-            );
+            path.join(MDX_SCOPES_LOCATION, `${filename}${ext}`);
 
           const createHash = str =>
             crypto
