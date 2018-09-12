@@ -1,6 +1,8 @@
 const path = require("path");
 const mkdirp = require("mkdirp");
 const fs = require("fs-extra");
+const { first, compact } = require("lodash");
+const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
 const defaultOptions = require("./utils/default-options");
 const mdx = require("./utils/mdx");
 const {
@@ -20,7 +22,8 @@ exports.onCreateNode = require("./gatsby/on-create-node");
 exports.setFieldsOnGraphQLNodeType = require("./gatsby/extend-node-type");
 
 /**
- * Add frontmatter as page context for MDX pages
+ * 1. Add frontmatter as page context for MDX pages
+ * 2. Wrap pages that query mdx in a wrapper for pulling in the MDX scope
  */
 exports.onCreatePage = require("./gatsby/on-create-page");
 
@@ -75,7 +78,17 @@ exports.preprocessSource = async function preprocessSource(
     const [, originalFile] = contents.replace(WRAPPER_START, "").split("\n// ");
 
     const code = await fs.readFile(originalFile, "utf8");
-    return code;
+
+    const transpiled = first(
+      compact(
+        await apiRunnerNode(`preprocessSource`, {
+          filename: originalFile,
+          contents: code
+        })
+      )
+    );
+
+    return transpiled || code;
   }
 
   return null;
