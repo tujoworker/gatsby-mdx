@@ -50,15 +50,15 @@ var _createReactContext = (0, _createReactContext3.default)({}),
 
 var withMDXScope = function withMDXScope(Component) {
   return function(_ref) {
-    var scope = _ref.scope,
-      props = _objectWithoutProperties(_ref, ["scope"]);
+    var scopes = _ref.scopes,
+      props = _objectWithoutProperties(_ref, ["scopes"]);
 
     return _react2.default.createElement(Consumer, null, function(
-      contextScope
+      contextScopes
     ) {
       return _react2.default.createElement(
         Component,
-        _extends({ scope: scope || contextScope }, props)
+        _extends({ scopes: scopes || contextScopes }, props)
       );
     });
   };
@@ -68,13 +68,9 @@ exports.withMDXScope = withMDXScope;
 var MDXScopeProvider = (exports.MDXScopeProvider = function MDXScopeProvider(
   _ref2
 ) {
-  var __mdxScope = _ref2.__mdxScope,
+  var scopes = _ref2.scopes,
     children = _ref2.children;
-  return _react2.default.createElement(
-    Provider,
-    { value: __mdxScope },
-    children
-  );
+  return _react2.default.createElement(Provider, { value: scopes }, children);
 });
 
 /*
@@ -83,13 +79,13 @@ import createReactContext from "create-react-context";
 
 const { Provider, Consumer } = createReactContext({});
 
-export const withMDXScope = Component => ({ scope, ...props }) => (
+export const withMDXScope = Component => ({ scopes, ...props }) => (
   <Consumer>
-    {contextScope => <Component scope={scope || contextScope} {...props} />}
+    {contextScopes => <Component scopes={scopes || contextScopes} {...props} />}
   </Consumer>
 );
 
-export const MDXScopeProvider = ({ __mdxScope, children }) => (
-  <Provider value={__mdxScope}>{children}</Provider>
+export const MDXScopeProvider = ({ scopes, children }) => (
+  <Provider value={scopes}>{children}</Provider>
 );
 */

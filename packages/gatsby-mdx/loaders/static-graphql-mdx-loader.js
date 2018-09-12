@@ -3,14 +3,12 @@
  *
  * For the next step in rendering from MDX node, see mdx-renderer.js
  */
+const crypto = require("crypto");
 const { graphql } = global;
 const { flatten, uniqBy } = require("lodash");
 const { babelParseToAst } = require("../utils/babel-parse-to-ast");
 const findStaticQueries = require("../utils/find-static-queries");
 const findScopes = require("../utils/find-scopes");
-
-const injectScopeIntoMDXRenderer = (code, scope) =>
-  code.replace(/<MDXRenderer/g, `$& scopes={${scope}}`);
 
 module.exports = async function(content) {
   const callback = this.async();
@@ -43,13 +41,23 @@ module.exports = async function(content) {
     .map(({ scopeId, scope }) => `import ${scopeId} from "${scope}";`)
     .join("\n");
 
-  const singleScopeObject = `{${scopes
-    .map(({ scopeId }) => scopeId)
-    .join(", ")}}`;
+  const mdxScopes = `{${scopes.map(({ scopeId }) => scopeId).join(", ")}}`;
+
+  const OriginalComponentId = `OriginalComponent_${crypto
+    .createHash(`md5`)
+    .update(mdxScopes)
+    .digest(`hex`)}`;
 
   const code = `${scopesImports}
+import { MDXScopeProvider } from "gatsby-mdx/context";
 
-${injectScopeIntoMDXRenderer(content, singleScopeObject)}`;
+${content.replace("export default ", `const ${OriginalComponentId} = `)}
+
+export default ({children, ...props}) => <MDXScopeProvider scopes={${mdxScopes}}>
+  <${OriginalComponentId} {...props}>
+    {children}
+  </${OriginalComponentId}>
+</MDXScopeProvider>`;
 
   return callback(null, code);
 };
