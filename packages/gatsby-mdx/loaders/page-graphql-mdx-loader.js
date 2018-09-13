@@ -37,6 +37,12 @@ module.exports = async function(content) {
       file,
       `${content.split("\n// hash ")[0]}\n${`// hash ${newHash}`}`
     );
+
+    /**
+     * early return when we are re-triggering the load so Gatsby
+     * picks up on the new pageQuery
+     */
+    return callback(null, "");
   }
 
   const components = [...store.getState().components.values()];
