@@ -30,6 +30,7 @@ module.exports = (props, pluginOptions) => {
               loader: "gatsby-mdx/loaders/static-graphql-mdx-loader",
               options: {
                 getNodes,
+                store,
                 pluginOptions: options
               }
             }
@@ -42,6 +43,7 @@ module.exports = (props, pluginOptions) => {
               loader: "gatsby-mdx/loaders/page-graphql-mdx-loader",
               options: {
                 getNodes,
+                store,
                 pluginOptions: options
               }
             }

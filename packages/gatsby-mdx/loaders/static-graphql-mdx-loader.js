@@ -5,60 +5,31 @@
  */
 const crypto = require("crypto");
 const { graphql } = global;
-const { flatten, uniqBy } = require("lodash");
-const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
-const { babelParseToAst } = require("../utils/babel-parse-to-ast");
-const findStaticQueries = require("../utils/find-static-queries");
+const { getOptions } = require("loader-utils");
+const { uniqBy } = require("lodash");
 const findScopes = require("../utils/find-scopes");
 
 module.exports = async function(content) {
   const callback = this.async();
+  const { store } = getOptions(this);
   const file = this.resourcePath;
 
-  let ast;
-  const transpiled = await apiRunnerNode(`preprocessSource`, {
-    filename: file,
-    contents: content
-  });
+  const staticQueryComponents = [
+    ...store.getState().staticQueryComponents.values()
+  ];
 
-  if (transpiled && transpiled.length) {
-    for (const item of transpiled) {
-      try {
-        const tmp = babelParseToAst(item, file);
-        ast = tmp;
-        break;
-      } catch (error) {
-        continue;
-      }
-    }
-  } else {
-    try {
-      ast = babelParseToAst(content, file);
-    } catch (error) {
-      // silently fail
-    }
-  }
-
-  if (!ast) {
-    return callback(null, content);
-  }
-
-  const queries = findStaticQueries(ast);
-  const results = [];
-
-  // if we have no static queries, move on
-  if (queries.length === 0) {
-    return callback(null, content);
-  }
-
-  for (let query of queries) {
-    results.push(await graphql(query));
-  }
-
-  const scopes = uniqBy(
-    flatten(results.map(({ data }) => findScopes(data))),
-    "id"
+  const foundComponent = staticQueryComponents.find(
+    component => component.componentPath === file
   );
+
+  if (!foundComponent) {
+    return callback(null, content);
+  }
+
+  // TODO: add check here for if query is looking for mdx.code
+
+  const result = await graphql(foundComponent.query);
+  const scopes = uniqBy(findScopes(result.data), "id");
 
   // if we have no mdx scopes, move on
   if (scopes.length === 0) {

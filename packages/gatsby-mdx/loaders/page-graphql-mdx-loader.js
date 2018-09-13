@@ -8,15 +8,12 @@ const { graphql } = global;
 const { getOptions } = require("loader-utils");
 const { uniqBy } = require("lodash");
 const fs = require("fs-extra");
-const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
-const { babelParseToAst } = require("../utils/babel-parse-to-ast");
 const findScopes = require("../utils/find-scopes");
-const findPageQuery = require("../utils/find-page-query");
 const { WRAPPER_START } = require("../constants");
 
 module.exports = async function(content) {
   const callback = this.async();
-  const { getNodes } = getOptions(this);
+  const { store, getNodes } = getOptions(this);
   const file = this.resourcePath;
 
   if (!content.startsWith(WRAPPER_START)) {
@@ -42,35 +39,17 @@ module.exports = async function(content) {
     );
   }
 
-  let ast;
-  const transpiled = await apiRunnerNode(`preprocessSource`, {
-    filename: originalFile,
-    contents: originalContent
-  });
+  const components = [...store.getState().components.values()];
 
-  if (transpiled && transpiled.length) {
-    for (const item of transpiled) {
-      try {
-        const tmp = babelParseToAst(item, originalFile);
-        ast = tmp;
-        break;
-      } catch (error) {
-        continue;
-      }
-    }
-  } else {
-    try {
-      ast = babelParseToAst(originalContent, originalFile);
-    } catch (error) {
-      // silently fail
-    }
-  }
-
-  const query = findPageQuery(ast);
+  const foundComponent = components.find(
+    component => component.componentPath === file
+  );
 
   const pageNode = getNodes().find(
     node => node.internal.type === `SitePage` && node.path === urlPath
   );
+
+  const query = (foundComponent && foundComponent.query) || "";
 
   const result = await graphql(query, pageNode && pageNode.context);
   const scopes = uniqBy(findScopes(result.data), "id");
