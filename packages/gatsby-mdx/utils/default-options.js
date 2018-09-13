@@ -13,7 +13,6 @@ module.exports = pluginOptions => {
       hastPlugins: [],
       mdPlugins: [],
       transformers: {},
-      root: process.cwd(),
       gatsbyRemarkPlugins: []
     },
     pluginOptions

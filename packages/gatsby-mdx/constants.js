@@ -7,18 +7,12 @@ const MDX_SCOPES_DIR = "mdx-scopes-dir";
 const WRAPPER_START = "// MDX WRAPPER";
 
 const MDX_WRAPPERS_LOCATION = path.join(
-  process.cwd(),
   CACHE_DIR,
   PLUGIN_DIR,
   MDX_WRAPPERS_DIR
 );
 
-const MDX_SCOPES_LOCATION = path.join(
-  process.cwd(),
-  CACHE_DIR,
-  PLUGIN_DIR,
-  MDX_SCOPES_DIR
-);
+const MDX_SCOPES_LOCATION = path.join(CACHE_DIR, PLUGIN_DIR, MDX_SCOPES_DIR);
 
 module.exports = {
   CACHE_DIR,

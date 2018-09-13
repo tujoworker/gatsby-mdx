@@ -41,11 +41,13 @@ module.exports = async ({ page, actions, store }, pluginOptions) => {
     );
   }
 
+  const state = store.getState();
+
   /**
    * Wrap pages that query mdx in a wrapper for pulling in the MDX scope
    */
   if (
-    store.getState().program.extensions.includes(ext) &&
+    state.program.extensions.includes(ext) &&
     !file.includes(MDX_WRAPPERS_LOCATION)
   ) {
     let ast;
@@ -86,7 +88,7 @@ module.exports = async ({ page, actions, store }, pluginOptions) => {
     // check if the query has anything that ends in mdx and has a code field
     if (/mdx(.*){/gi.test(query) && query.includes("code")) {
       deletePage(page);
-      createPage(pageWithMDX(page));
+      createPage(pageWithMDX(page, { directory: state.program.directory }));
     }
   }
 };

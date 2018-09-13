@@ -63,7 +63,7 @@ const stripFrontmatter = source => grayMatter(source).content;
  *  */
 
 module.exports = (
-  { type /*store*/, pathPrefix, getNode, getNodes, cache, reporter },
+  { type, store, pathPrefix, getNode, getNodes, cache, reporter },
   pluginOptions
 ) => {
   if (!type.name.endsWith(`Mdx`)) {
@@ -217,7 +217,7 @@ module.exports = (
             .replace(/\nexport /g, "\n");
 
           const createFilePath = (directory, filename, ext) =>
-            path.join(MDX_SCOPES_LOCATION, `${filename}${ext}`);
+            path.join(directory, MDX_SCOPES_LOCATION, `${filename}${ext}`);
 
           const createHash = str =>
             crypto
@@ -240,7 +240,7 @@ module.exports = (
 export default { ${identifiers.join(", ")} }`;
 
           const scopeLocation = createFilePath(
-            options.root,
+            store.getState().program.directory,
             createHash(scopeFileContent),
             ".js"
           );

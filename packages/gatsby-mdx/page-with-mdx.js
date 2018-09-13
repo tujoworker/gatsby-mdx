@@ -21,13 +21,14 @@ const createWrapper = ({ component, path }) =>
 export const pageQuery = graphql\`\`
 // hash `;
 
-module.exports = function pageWithMDX(pageConfig) {
+module.exports = function pageWithMDX(pageConfig, { directory }) {
   const componentHash = crypto
     .createHash(`md5`)
     .update(pageConfig.path)
     .digest(`hex`);
 
   const wrapperLocation = path.join(
+    directory,
     MDX_WRAPPERS_LOCATION,
     `${componentHash}.js`
   );

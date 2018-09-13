@@ -36,9 +36,10 @@ exports.onCreateWebpackConfig = require("./gatsby/create-webpack-config");
  * Create the cache directories
  */
 
-exports.onPreBootstrap = () => {
-  mkdirp.sync(MDX_WRAPPERS_LOCATION);
-  mkdirp.sync(MDX_SCOPES_LOCATION);
+exports.onPreBootstrap = ({ store }) => {
+  const { directory } = store.getState().program;
+  mkdirp.sync(path.join(directory, MDX_WRAPPERS_LOCATION));
+  mkdirp.sync(path.join(directory, MDX_SCOPES_LOCATION));
 };
 
 /**
