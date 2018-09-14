@@ -1,6 +1,7 @@
 const path = require("path");
 const escapeStringRegexp = require("escape-string-regexp");
 const defaultOptions = require("../utils/default-options");
+const { CACHE_LOCATION } = require("../constants");
 
 module.exports = (props, pluginOptions) => {
   const { stage, loaders, actions, plugins, getNodes, store } = props;
@@ -20,7 +21,7 @@ module.exports = (props, pluginOptions) => {
       rules: [
         {
           test: /\.js$/,
-          include: path.resolve(__dirname, ".cache/gatsby-mdx"),
+          include: path.resolve(__dirname, CACHE_LOCATION),
           use: [loaders.js()]
         },
         {

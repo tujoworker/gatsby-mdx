@@ -57,19 +57,22 @@ module.exports = async ({ page, actions, store }, pluginOptions) => {
 
     const queryAST = document && first(document.definitions);
 
-    // if we don't have a query or the query is a static component, move on
+    // if we don't have a query or the query is a static query, move on
     if (!queryAST || queryAST.isStaticQuery) {
       return;
     }
 
-    if (isMDXCodeQuery(queryAST)) {
-      deletePage(page);
-      createPage(
-        pageWithMDX({
-          page,
-          directory: state.program.directory
-        })
-      );
+    // if the query isn't looking for the code field of mdx nodes, move on
+    if (!isMDXCodeQuery(queryAST)) {
+      return;
     }
+
+    deletePage(page);
+    createPage(
+      pageWithMDX({
+        page,
+        directory: state.program.directory
+      })
+    );
   }
 };
