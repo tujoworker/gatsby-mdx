@@ -8,6 +8,7 @@ const { graphql } = global;
 const { getOptions } = require("loader-utils");
 const { uniqBy } = require("lodash");
 const findScopes = require("../utils/find-scopes");
+const isMDXCodeQuery = require("../utils/is-mdx-code-query");
 
 module.exports = async function(content) {
   const callback = this.async();
@@ -26,7 +27,10 @@ module.exports = async function(content) {
     return callback(null, content);
   }
 
-  // TODO: add check here for if query is looking for mdx.code
+  // we aren't querying for mdx code
+  if (!isMDXCodeQuery(foundComponent.query)) {
+    return callback(null, content);
+  }
 
   const result = await graphql(foundComponent.query);
   const scopes = uniqBy(findScopes(result.data), "id");
