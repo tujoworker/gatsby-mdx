@@ -55,7 +55,7 @@ module.exports = async function(content) {
   const code = `${scopesImports}
 import { MDXScopeProvider } from "gatsby-mdx/context";
 
-${content.replace("export default ", `const ${OriginalComponentId} = `)}
+${content.replace(/export\s+default/, `const ${OriginalComponentId} =`)}
 
 export default ({children, ...props}) => <MDXScopeProvider scopes={${mdxScopes}}>
   <${OriginalComponentId} {...props}>
