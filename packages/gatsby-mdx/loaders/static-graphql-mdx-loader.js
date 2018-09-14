@@ -5,6 +5,7 @@
  */
 const crypto = require("crypto");
 const { graphql } = global;
+const { parse: parseGraphQL } = require("gatsby/graphql");
 const { getOptions } = require("loader-utils");
 const { uniqBy } = require("lodash");
 const findScopes = require("../utils/find-scopes");
@@ -28,7 +29,7 @@ module.exports = async function(content) {
   }
 
   // we aren't querying for mdx code
-  if (!isMDXCodeQuery(foundComponent.query)) {
+  if (!isMDXCodeQuery(parseGraphQL(foundComponent.query))) {
     return callback(null, content);
   }
 

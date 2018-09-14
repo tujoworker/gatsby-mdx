@@ -25,9 +25,13 @@ exports.onCreatePage = require("./gatsby/on-create-page");
 exports.onCreateWebpackConfig = require("./gatsby/create-webpack-config");
 
 /**
+ * preprocess mdx files and page wrappers before Gatsby extracts the graphql queries
+ */
+exports.preprocessSource = require("./gatsby/preprocess-source");
+
+/**
  * Create the cache directories
  */
-
 exports.onPreBootstrap = ({ store }) => {
   const { directory } = store.getState().program;
   mkdirp.sync(path.join(directory, MDX_WRAPPERS_LOCATION));
@@ -40,11 +44,6 @@ exports.onPreBootstrap = ({ store }) => {
 exports.createPages = ({ graphql }) => {
   global.graphql = graphql;
 };
-
-/**
- * preprocess mdx files and page wrappers before Gatsby extracts the graphql queries
- */
-exports.preprocessSource = require("./gatsby/preprocess-source");
 
 /**
  * Add the MDX extensions as resolvable. This is how the page creator

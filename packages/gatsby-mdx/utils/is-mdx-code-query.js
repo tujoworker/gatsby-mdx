@@ -1,6 +1,5 @@
 const { get } = require("lodash");
 const traverse = require("traverse");
-const graphql = require("gatsby/graphql");
 
 /**
  * Checks if the given GraphQL query looks for the code field in an mdx node
@@ -19,9 +18,9 @@ const findChild = (node, childName) => {
   return child;
 };
 
-module.exports = function isMDXCodeQuery(query) {
+module.exports = function isMDXCodeQuery(queryAST) {
   try {
-    return traverse(graphql.parse(query)).reduce(function(acc, node) {
+    return traverse(queryAST).reduce(function(acc, node) {
       // if the node is falsy, skip it
       if (!node) {
         return acc;

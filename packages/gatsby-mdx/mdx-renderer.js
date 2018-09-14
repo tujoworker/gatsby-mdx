@@ -10,7 +10,7 @@ export default withMDXScope(
       ...scopes[scope.id]
     };
 
-    // children is pre-compiled mdx
+    // body is pre-compiled mdx
     const keys = Object.keys(fullScope);
     const values = keys.map(key => fullScope[key]);
     const fn = new Function("_fn", ...keys, `${body}`);

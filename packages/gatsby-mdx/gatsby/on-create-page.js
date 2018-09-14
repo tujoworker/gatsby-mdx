@@ -1,13 +1,17 @@
 const path = require("path");
 const fs = require("fs-extra");
-const { merge, first, compact } = require("lodash");
-const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
+const { merge, first } = require("lodash");
+const {
+  default: FileParser
+} = require("gatsby/dist/internal-plugins/query-runner/file-parser");
 const defaultOptions = require("../utils/default-options");
 const extractExports = require("../utils/extract-exports");
 const mdx = require("../utils/mdx");
 const pageWithMDX = require("../page-with-mdx");
 const isMDXCodeQuery = require("../utils/is-mdx-code-query");
 const { MDX_WRAPPERS_LOCATION } = require("../constants.js");
+
+const parser = new FileParser();
 
 module.exports = async ({ page, actions, store }, pluginOptions) => {
   const { createPage, deletePage } = actions;
@@ -49,23 +53,16 @@ module.exports = async ({ page, actions, store }, pluginOptions) => {
     state.program.extensions.includes(ext) &&
     !file.includes(MDX_WRAPPERS_LOCATION)
   ) {
-    const preProcessedContent = await fs.readFile(file, "utf8");
-    const transpiled = await apiRunnerNode(`preprocessSource`, {
-      filename: file,
-      contents: preProcessedContent
-    });
+    const document = await parser.parseFile(file);
 
-    let content = first(compact(transpiled)) || preProcessedContent;
+    const queryAST = document && first(document.definitions);
 
-    const result = /export.+graphql`((?:\n|(?:\\`)|[^`])*)`/g.exec(content);
-
-    if (!result) {
+    // if we don't have a query or the query is a static component, move on
+    if (!queryAST || queryAST.isStaticQuery) {
       return;
     }
 
-    const query = result[1];
-
-    if (isMDXCodeQuery(query)) {
+    if (isMDXCodeQuery(queryAST)) {
       deletePage(page);
       createPage(
         pageWithMDX({
