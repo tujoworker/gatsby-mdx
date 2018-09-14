@@ -21,10 +21,10 @@ const createWrapper = ({ component, path }) =>
 export const pageQuery = graphql\`\`
 // hash `;
 
-module.exports = function pageWithMDX(pageConfig, { directory }) {
+module.exports = function pageWithMDX({ page, directory }) {
   const componentHash = crypto
     .createHash(`md5`)
-    .update(pageConfig.path)
+    .update(page.path)
     .digest(`hex`);
 
   const wrapperLocation = path.join(
@@ -34,15 +34,15 @@ module.exports = function pageWithMDX(pageConfig, { directory }) {
   );
 
   const newWrapper = createWrapper({
-    component: pageConfig.component,
-    path: pageConfig.path
+    component: page.component,
+    path: page.path
   });
 
   fs.writeFileSync(wrapperLocation, newWrapper);
 
-  debug(`wrapper "${wrapperLocation}" created from "${pageConfig.component}"`);
+  debug(`wrapper "${wrapperLocation}" created from "${page.component}"`);
   return {
-    ...pageConfig,
+    ...page,
     component: wrapperLocation
   };
 };

@@ -1,13 +1,12 @@
 const path = require("path");
 const fs = require("fs-extra");
-const merge = require("lodash/merge");
+const { merge, first, compact } = require("lodash");
 const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
 const defaultOptions = require("../utils/default-options");
 const extractExports = require("../utils/extract-exports");
 const mdx = require("../utils/mdx");
 const pageWithMDX = require("../page-with-mdx");
-const { babelParseToAst } = require("../utils/babel-parse-to-ast");
-const findPageQuery = require("../utils/find-page-query");
+const isMDXCodeQuery = require("../utils/is-mdx-code-query");
 const { MDX_WRAPPERS_LOCATION } = require("../constants.js");
 
 module.exports = async ({ page, actions, store }, pluginOptions) => {
@@ -50,45 +49,30 @@ module.exports = async ({ page, actions, store }, pluginOptions) => {
     state.program.extensions.includes(ext) &&
     !file.includes(MDX_WRAPPERS_LOCATION)
   ) {
-    let ast;
     const preProcessedContent = await fs.readFile(file, "utf8");
     const transpiled = await apiRunnerNode(`preprocessSource`, {
       filename: file,
       contents: preProcessedContent
     });
 
-    if (transpiled && transpiled.length) {
-      for (const item of transpiled) {
-        try {
-          const tmp = babelParseToAst(item, file);
-          ast = tmp;
-          break;
-        } catch (error) {
-          continue;
-        }
-      }
-    } else {
-      try {
-        ast = babelParseToAst(preProcessedContent, file);
-      } catch (error) {
-        // silently fail
-      }
-    }
+    let content = first(compact(transpiled)) || preProcessedContent;
 
-    if (!ast) {
+    const result = /export.+graphql`((?:\n|(?:\\`)|[^`])*)`/g.exec(content);
+
+    if (!result) {
       return;
     }
 
-    const query = findPageQuery(ast);
+    const query = result[1];
 
-    if (!query) {
-      return;
-    }
-
-    // check if the query has anything that ends in mdx and has a code field
-    if (/mdx(.*){/gi.test(query) && query.includes("code")) {
+    if (isMDXCodeQuery(query)) {
       deletePage(page);
-      createPage(pageWithMDX(page, { directory: state.program.directory }));
+      createPage(
+        pageWithMDX({
+          page,
+          directory: state.program.directory
+        })
+      );
     }
   }
 };
