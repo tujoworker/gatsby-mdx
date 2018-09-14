@@ -5,15 +5,21 @@
  */
 const crypto = require("crypto");
 const { graphql } = global;
+const { print: stringifyGraphQL } = require("gatsby/graphql");
 const { getOptions } = require("loader-utils");
 const { uniqBy } = require("lodash");
 const fs = require("fs-extra");
+const {
+  default: FileParser
+} = require("gatsby/dist/internal-plugins/query-runner/file-parser");
 const findScopes = require("../utils/find-scopes");
 const { WRAPPER_START } = require("../constants");
 
+const parser = new FileParser();
+
 module.exports = async function(content) {
   const callback = this.async();
-  const { store, getNodes } = getOptions(this);
+  const { getNodes } = getOptions(this);
   const file = this.resourcePath;
 
   if (!content.startsWith(WRAPPER_START)) {
@@ -25,17 +31,23 @@ module.exports = async function(content) {
     .split("\n// ");
 
   this.addDependency(originalFile);
-  const originalContent = await fs.readFile(originalFile, "utf8");
 
-  const oldHash = content.split("\n// hash ")[1];
+  const document = await parser.parseFile(originalFile);
+
+  let query = "";
+  if (document) {
+    query = stringifyGraphQL(document);
+  }
+
+  const oldHash = content.split("\n// queryHash ")[1];
   const newHash = crypto
     .createHash(`md5`)
-    .update(originalContent)
+    .update(query)
     .digest(`hex`);
   if (oldHash !== newHash) {
     await fs.writeFile(
       file,
-      `${content.split("\n// hash ")[0]}\n${`// hash ${newHash}`}`
+      `${content.split("\n// queryHash ")[0]}\n${`// queryHash ${newHash}`}`
     );
 
     /**
@@ -45,17 +57,9 @@ module.exports = async function(content) {
     return callback(null, "");
   }
 
-  const components = [...store.getState().components.values()];
-
-  const foundComponent = components.find(
-    component => component.componentPath === file
-  );
-
   const pageNode = getNodes().find(
     node => node.internal.type === `SitePage` && node.path === urlPath
   );
-
-  const query = (foundComponent && foundComponent.query) || "";
 
   const result = await graphql(query, pageNode && pageNode.context);
   const scopes = uniqBy(findScopes(result.data), "id");
