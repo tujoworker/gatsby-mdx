@@ -20,39 +20,44 @@ const findChild = (node, childName) => {
 };
 
 module.exports = function isMDXCodeQuery(query) {
-  return traverse(graphql.parse(query)).reduce(function(acc, node) {
-    // if the node is falsy, skip it
-    if (!node) {
-      return acc;
-    }
+  try {
+    return traverse(graphql.parse(query)).reduce(function(acc, node) {
+      // if the node is falsy, skip it
+      if (!node) {
+        return acc;
+      }
 
-    // if the query is already good, skip more looking
-    if (acc) {
-      return true;
-    }
+      // if the query is already good, skip more looking
+      if (acc) {
+        return true;
+      }
 
-    // node isn't a field that ends in mdx (case insenstive), stop looking at it
-    if (
-      !(
-        node.kind === "Field" &&
-        node.name.value &&
-        /mdx$/i.test(node.name.value)
-      )
-    ) {
-      return acc;
-    }
+      // node isn't a field that ends in mdx (case insenstive), stop looking at it
+      if (
+        !(
+          node.kind === "Field" &&
+          node.name.value &&
+          /mdx$/i.test(node.name.value)
+        )
+      ) {
+        return acc;
+      }
 
-    const codeField = findChild(node, "code");
+      const codeField = findChild(node, "code");
 
-    // if we found the code field, this query is good to go
-    if (codeField) {
-      return true;
-    }
+      // if we found the code field, this query is good to go
+      if (codeField) {
+        return true;
+      }
 
-    // if we have a edges.node.mdx.code, this query is good to go
-    const edgesField = findChild(node, "edges");
-    const nodeField = edgesField && findChild(edgesField, "node");
+      // if we have a edges.node.mdx.code, this query is good to go
+      const edgesField = findChild(node, "edges");
+      const nodeField = edgesField && findChild(edgesField, "node");
 
-    return edgesField && nodeField && findChild(nodeField, "code");
-  }, false);
+      return edgesField && nodeField && findChild(nodeField, "code");
+    }, false);
+  } catch (e) {
+    // not a valid graphql query
+    return false;
+  }
 };
