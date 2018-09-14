@@ -11,15 +11,8 @@ const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
 const debug = require("debug")("gatsby-mdx:page-with-mdx");
-const { WRAPPER_START, MDX_WRAPPERS_LOCATION } = require("./constants");
-
-const createWrapper = ({ component, path }) =>
-  `${WRAPPER_START}
-// ${component}
-// ${path}
-// 
-export const pageQuery = graphql\`\`
-// queryHash `;
+const { createWrapper } = require("./utils/wrapper");
+const { MDX_WRAPPERS_LOCATION } = require("./constants");
 
 module.exports = function pageWithMDX({ page, directory }) {
   const componentHash = crypto

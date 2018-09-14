@@ -4,7 +4,7 @@ const { first, compact } = require("lodash");
 const apiRunnerNode = require("gatsby/dist/utils/api-runner-node");
 const defaultOptions = require("../utils/default-options");
 const mdx = require("../utils/mdx");
-const { WRAPPER_START } = require("../constants");
+const { isWrapper, parseWrapper } = require("../utils/wrapper");
 
 module.exports = async function preprocessSource(
   { filename, contents },
@@ -25,8 +25,8 @@ module.exports = async function preprocessSource(
    * Intercept MDX wrappers and pass through the original component so the
    * query can be extracted correctly
    */
-  if (contents.startsWith(WRAPPER_START)) {
-    const [, originalFile] = contents.replace(WRAPPER_START, "").split("\n// ");
+  if (isWrapper(contents)) {
+    const { component: originalFile } = parseWrapper(contents);
 
     const code = await fs.readFile(originalFile, "utf8");
 

@@ -12,8 +12,12 @@ const fs = require("fs-extra");
 const {
   default: FileParser
 } = require("gatsby/dist/internal-plugins/query-runner/file-parser");
+const {
+  isWrapper,
+  parseWrapper,
+  updateQueryHash
+} = require("../utils/wrapper");
 const findScopes = require("../utils/find-scopes");
-const { WRAPPER_START } = require("../constants");
 
 const parser = new FileParser();
 
@@ -22,13 +26,15 @@ module.exports = async function(content) {
   const { getNodes } = getOptions(this);
   const file = this.resourcePath;
 
-  if (!content.startsWith(WRAPPER_START)) {
+  if (!isWrapper(content)) {
     return callback(null, content);
   }
 
-  const [, originalFile, urlPath] = content
-    .replace(WRAPPER_START, "")
-    .split("\n// ");
+  const {
+    component: originalFile,
+    path: urlPath,
+    queryHash: oldHash
+  } = parseWrapper(content);
 
   this.addDependency(originalFile);
 
@@ -39,21 +45,17 @@ module.exports = async function(content) {
     query = stringifyGraphQL(document);
   }
 
-  const oldHash = content.split("\n// queryHash ")[1];
   const newHash = crypto
     .createHash(`md5`)
     .update(query)
     .digest(`hex`);
+  /**
+   * If the pageQuery has changed, we retrigger the webpack loader and force
+   * Gatsby to pick up on the new pageQuery
+   */
   if (oldHash !== newHash) {
-    await fs.writeFile(
-      file,
-      `${content.split("\n// queryHash ")[0]}\n${`// queryHash ${newHash}`}`
-    );
+    await fs.writeFile(file, updateQueryHash(content, newHash));
 
-    /**
-     * early return when we are re-triggering the load so Gatsby
-     * picks up on the new pageQuery
-     */
     return callback(null, "");
   }
 
