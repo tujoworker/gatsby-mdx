@@ -1,43 +1,63 @@
-const { isFunction } = require("lodash");
-const debug = require("debug")("gatsby-mdx:on-create-node");
-
+const crypto = require("crypto");
 const defaultOptions = require("../utils/default-options");
-const createMDXNode = require("../utils/create-mdx-node");
+const mdx = require("../utils/mdx");
+const extractExports = require("../utils/extract-exports");
 
 module.exports = async (
-  { node, getNode, loadNodeContent, actions, createNodeId },
+  { node, loadNodeContent, actions, createNodeId },
   pluginOptions
 ) => {
+  const { createNode, createParentChildLink } = actions;
   const options = defaultOptions(pluginOptions);
 
-  /**
-   * transformerOptions can be a function or a {transformer, filter} object
-   */
-  if (Object.keys(options.transformers).includes(node.internal.type)) {
-    const transformerOptions = options.transformers[node.internal.type];
-    const transformerFn = isFunction(transformerOptions)
-      ? transformerOptions
-      : transformerOptions.transformer;
-    const filterFn = transformerOptions ? transformerOptions.filter : undefined;
-    debug(
-      `${node.internal.type} has transformerFn ${isFunction(transformerFn)}`
-    );
-    debug(`${node.internal.type} has filterFn ${isFunction(filterFn)}`);
-    if (transformerFn) {
-      if ((isFunction(filterFn) && filterFn({ node })) || !filterFn) {
-        debug(`processing node ${node.id}`);
-        await createMDXNode(
-          {
-            createNodeId,
-            getNode,
-            loadNodeContent,
-            node,
-            transform: transformerFn
-          },
-          actions,
-          { __internalMdxTypeName: "Mdx", ...pluginOptions }
-        );
-      }
-    }
+  const isMarkdownMediaType =
+    node.internal.mediaType === `text/markdown` ||
+    node.internal.mediaType === `text/x-markdown`;
+
+  if (
+    !options.extensions.includes(node.ext) &&
+    !(options.handleMarkdown && isMarkdownMediaType)
+  ) {
+    return;
   }
+
+  const content = await loadNodeContent(node);
+
+  const code = await mdx(content, options);
+
+  // extract all the exports
+  const { frontmatter, ...nodeExports } = extractExports(code);
+
+  const mdxNode = {
+    id: createNodeId(`${node.id} >>> Mdx`),
+    children: [],
+    parent: node.id,
+    internal: {
+      content: content,
+      type: "Mdx"
+    }
+  };
+
+  mdxNode.frontmatter = {
+    title: ``, // always include a title
+    ...frontmatter,
+    _PARENT: node.id
+  };
+
+  mdxNode.excerpt = frontmatter.excerpt;
+  mdxNode.exports = nodeExports;
+  mdxNode.rawBody = content;
+
+  // Add path to the markdown file path
+  if (node.internal.type === `File`) {
+    mdxNode.fileAbsolutePath = node.absolutePath;
+  }
+
+  mdxNode.internal.contentDigest = crypto
+    .createHash(`md5`)
+    .update(JSON.stringify(mdxNode))
+    .digest(`hex`);
+
+  createNode(mdxNode);
+  createParentChildLink({ parent: node, child: mdxNode });
 };
