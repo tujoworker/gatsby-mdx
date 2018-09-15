@@ -1,4 +1,4 @@
-const { isString, once } = require("lodash");
+const { isString, uniq, once } = require("lodash");
 const debug = require("debug")("gatsby-mdx:utils/default-options");
 
 const optDebug = once(options => {
@@ -10,6 +10,7 @@ module.exports = pluginOptions => {
     {
       defaultLayouts: {},
       extensions: [".mdx"],
+      handleMarkdown: true,
       hastPlugins: [],
       mdPlugins: [],
       transformers: {},
@@ -18,6 +19,15 @@ module.exports = pluginOptions => {
     },
     pluginOptions
   );
+
+  /**
+   * When `handleMarkdown` is true, we will catch all nodes with the media type
+   * of `text/markdown`. In order for the mdx-loader to load markdown files as well
+   * we need to add these file extensions.
+   */
+  if (options.handleMarkdown) {
+    options.extensions = uniq([...options.extensions, ".md", ".markdown"]);
+  }
 
   // ensure File transformer is always ours
   options.transformers.File = {
