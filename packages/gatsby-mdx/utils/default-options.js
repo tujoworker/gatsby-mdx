@@ -13,7 +13,6 @@ module.exports = pluginOptions => {
       handleMarkdown: true,
       hastPlugins: [],
       mdPlugins: [],
-      transformers: {},
       root: process.cwd(),
       gatsbyRemarkPlugins: []
     },
@@ -22,24 +21,13 @@ module.exports = pluginOptions => {
 
   /**
    * When `handleMarkdown` is true, we will catch all nodes with the media type
-   * of `text/markdown`. In order for the mdx-loader to load markdown files as well
-   * we need to add these file extensions.
+   * of `text/markdown`, in addition to any files with extensions we support.
+   * In order for the mdx-loader to properly load markdown files as well,
+   * we need to add the markdown file extensions.
    */
   if (options.handleMarkdown) {
     options.extensions = uniq([...options.extensions, ".md", ".markdown"]);
   }
-
-  // ensure File transformer is always ours
-  options.transformers.File = {
-    transformer: async ({ loadNodeContent, node }) => {
-      const mdxContent = await loadNodeContent(node);
-      return { meta: undefined, content: mdxContent };
-    },
-    // We only care about markdown content.
-    // replace with mediaType when mime-db is merged
-    //    node.internal.mediaType !== `text/mdx`
-    filter: ({ node }) => options.extensions.includes(node.ext)
-  };
 
   // support single layout set in the `defaultLayouts` option
   if (options.defaultLayouts && isString(options.defaultLayouts)) {
